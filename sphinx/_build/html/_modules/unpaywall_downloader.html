@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>unpaywall_downloader &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">unpaywall_downloader</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for unpaywall_downloader</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">downloader</span> <span class="kn">import</span> <span class="n">Downloader</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">unpywall.utils</span> <span class="kn">import</span> <span class="n">UnpywallCredentials</span>
+<span class="kn">from</span> <span class="nn">unpywall</span> <span class="kn">import</span> <span class="n">Unpywall</span>
+<span class="kn">from</span> <span class="nn">requests</span> <span class="kn">import</span> <span class="n">exceptions</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">db_connection</span> <span class="kn">import</span> <span class="n">DBConnection</span>
+<span class="kn">from</span> <span class="nn">utils_mixin</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<div class="viewcode-block" id="UnpaywallDownloader"><a class="viewcode-back" href="../unpaywall_downloader.html#unpaywall_downloader.UnpaywallDownloader">[docs]</a><span class="k">class</span> <span class="nc">UnpaywallDownloader</span><span class="p">(</span><span class="n">Downloader</span><span class="p">,</span> <span class="n">Utils</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;initializes the UnpaywallDownloader object by calling the </span>
+<span class="sd">        constructor of the superclass(Downloader) using &#39;super().__init__()&#39;. </span>
+<span class="sd">        It sets several instance attributes to None, including &#39;open_url&#39;,</span>
+<span class="sd">        &#39;most_recent_firefox_failure&#39;, &#39;most_recent_attempt&#39;, &#39;error_code&#39;, </span>
+<span class="sd">        and &#39;firefox_failure&#39;. It then calls the &#39;create_tables&#39; method to </span>
+<span class="sd">        create the &#39;unpaywall_downloader&#39; table in the database.</span>
+
+<span class="sd">        Note: The &#39;self&#39; parameter refers to the instance of the </span>
+<span class="sd">        UnpaywallDownloader class being created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_firefox_failure</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_attempt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">firefox_failure</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="UnpaywallDownloader.create_tables"><a class="viewcode-back" href="../unpaywall_downloader.html#unpaywall_downloader.UnpaywallDownloader.create_tables">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates the &#39;unpaywall_downloader&#39; table in the database </span>
+<span class="sd">        if it does not already exist.</span>
+<span class="sd">        The table schema includes columns for DOI (doi), open URL (open_url), </span>
+<span class="sd">        most recent attempt timestamp (most_recent_attempt),</span>
+<span class="sd">        most recent Firefox failure timestamp (most_recent_firefox_failure), </span>
+<span class="sd">        error code (error_code), and not available flag (not_available).</span>
+
+<span class="sd">        The DOI column is set as the primary key to ensure uniqueness of DOI entries in the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">sql_create_database_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot; create table IF NOT EXISTS unpaywall_downloader</span>
+<span class="s2">                                        (</span>
+<span class="s2">                                            doi TEXT primary key,</span>
+<span class="s2">                                            open_url TEXT, </span>
+<span class="s2">                                            most_recent_attempt DATE,</span>
+<span class="s2">                                            most_recent_firefox_failure DATE,</span>
+<span class="s2">                                            error_code boolean,</span>
+<span class="s2">                                            not_available boolean</span>
+
+<span class="s2">                                        ); &quot;&quot;&quot;</span>
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql_create_database_table</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_unpaywall_database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the Unpaywall database with the download information for the </span>
+<span class="sd">        provided DOI. It inserts or replaces a record in the &#39;unpaywall_downloader&#39;</span>
+<span class="sd">        table with the DOI, open URL, most recent attempt timestamp, most recent </span>
+<span class="sd">        Firefox failure timestamp, error code, and not available flag. The method</span>
+<span class="sd">        uses the class attributes `self.open_url`, `self.most_recent_firefox_failure`</span>
+<span class="sd">        , `self.error_code`, and `self.not_available`to populate the database record.</span>
+
+<span class="sd">        :param doi: The DOI for which the download information is to be updated in the database.</span>
+<span class="sd">        :type doi: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;INSERT OR REPLACE INTO unpaywall_downloader(doi, open_url, most_recent_attempt, most_recent_firefox_failure,error_code,not_available) VALUES(?,?,?,?,?,?)&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">doi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_firefox_failure</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">not_available</span><span class="p">]</span>
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UnpaywallDownloader.download"><a class="viewcode-back" href="../unpaywall_downloader.html#unpaywall_downloader.UnpaywallDownloader.download">[docs]</a>    <span class="k">def</span> <span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_entry</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attempts to download a DOI entry from Unpaywall based on the given </span>
+<span class="sd">        DOI and the configuration settings. The method first retrieves the</span>
+<span class="sd">        most recent downloaddetails from the Unpaywall database for the provided </span>
+<span class="sd">        DOI. If the DOI has been downloaded previously, it checks the </span>
+<span class="sd">        configuration settings to determine whether to retry the </span>
+<span class="sd">        download based on different conditions.</span>
+
+<span class="sd">        :param doi_entry: The DOI entry to download.</span>
+<span class="sd">        :type doi_entry: DoiEntry</span>
+<span class="sd">        :return: True if the download is successful, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_firefox_failure</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_attempt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">not_available</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">force_update_link_only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;force_update_link_only&#39;</span><span class="p">)</span>
+        <span class="n">populate_not_available_only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;populate_not_available_only&#39;</span><span class="p">)</span>
+
+        <span class="c1"># logging.debug(f&quot;Download unpaywall:{doi_entry}&quot;)</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select most_recent_attempt, open_url, most_recent_firefox_failure,error_code,not_available from unpaywall_downloader where doi=&#39;</span><span class="si">{</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_attempt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_attempt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATETIME_FORMAT</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_firefox_failure</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">not_available</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">force_update_link_only</span> <span class="ow">and</span> <span class="n">populate_not_available_only</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_available</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># if self.error_code != 200:</span>
+        <span class="c1">#     logging.warning(&quot;Will not retry - last attempt was not found&quot;)</span>
+        <span class="n">retry_only_failures_with_link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_only_failures_with_link&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">retry_only_failures_with_link</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">meets_datetime_requrements</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_attempt</span><span class="p">):</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Attempted too recently; last attempt was </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">most_recent_attempt</span><span class="si">}</span><span class="s2"> cutoff is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;retry_after_datetime&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s2">&quot;unpaywall_downloader&quot;</span><span class="p">,</span> <span class="s2">&quot;attempt_direct_link&quot;</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Attempting direct link...&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_link</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">):</span>
+                <span class="n">doi_entry</span><span class="o">.</span><span class="n">downloaded</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># update most recent attempt</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_unpaywall_database</span><span class="p">(</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">doi</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_unpaywall</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_unpaywall_database</span><span class="p">(</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">doi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+    <span class="c1"># Crossref downloader has some good code to extract PDF link</span>
+    <span class="c1"># from HTML</span>
+    <span class="k">def</span> <span class="nf">_download_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_entry</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attempts to download the DOI entry using a direct link if available</span>
+<span class="sd">          in the DOI entry details (dois table, details column). The method </span>
+<span class="sd">          first checks if the DOI entry has a &#39;link&#39; field in its details. If </span>
+<span class="sd">          the field exists, it retrieves the direct link to the PDF file and </span>
+<span class="sd">          attempts to download the PDF. If the download is successful, it </span>
+<span class="sd">          returns True; otherwise, it returns False.</span>
+
+<span class="sd">            :param doi_entry: The DOI entry object to download.</span>
+<span class="sd">            :type doi_entry: DoiEntry</span>
+<span class="sd">            :return: True if the download is successful, False otherwise.</span>
+<span class="sd">            :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="s1">&#39;link&#39;</span> <span class="ow">in</span> <span class="n">doi_entry</span><span class="o">.</span><span class="n">details</span><span class="p">:</span>
+            <span class="n">direct_link</span> <span class="o">=</span> <span class="n">doi_entry</span><span class="o">.</span><span class="n">details</span><span class="p">[</span><span class="s1">&#39;link&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;URL&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Direct link cited; attempting link: </span><span class="si">{</span><span class="n">direct_link</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">is_good</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_url_to_pdf_bin</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">,</span> <span class="n">direct_link</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF_DIRECTORY</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">is_good</span>
+
+    <span class="k">def</span> <span class="nf">_download_unpaywall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_entry</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attempts to download the DOI entry from Unpaywall based on the given</span>
+<span class="sd">        DOI entry object. The method retrieves configuration settings and performs</span>
+<span class="sd">        various checksto determine the appropriate download strategy. If the DOI </span>
+<span class="sd">        entry is available through Unpaywall,it attempts to download the PDF </span>
+<span class="sd">        file using the direct link. If the download is successful,it returns True, </span>
+<span class="sd">        otherwise False.</span>
+
+<span class="sd">        :param doi_entry: The DOI entry object to download.</span>
+<span class="sd">        :type doi_entry: DoiEntry</span>
+<span class="sd">        :raises Exception: Raises an exception if the download process encounters critical issues.</span>
+<span class="sd">        :return: True if the download is successful, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting unpaywall... @</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">use_firefox_downloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;firefox_downloader&#39;</span><span class="p">)</span>
+        <span class="n">retry_firefox_failure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_firefox_failure&#39;</span><span class="p">)</span>
+        <span class="n">force_open_url_update</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;force_open_url_update&#39;</span><span class="p">)</span>
+        <span class="n">force_update_link_only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;force_update_link_only&#39;</span><span class="p">)</span>
+        <span class="n">do_not_refetch_links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;do_not_refetch_links&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># logging.debug(f&quot;Downloading to: {doi_entry.generate_file_path()}&quot;)</span>
+            <span class="n">email</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s2">&quot;downloaders&quot;</span><span class="p">,</span> <span class="s2">&quot;header_email&quot;</span><span class="p">)</span>
+            <span class="n">UnpywallCredentials</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">not_available</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">do_not_refetch_links</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Do not re-pull missing unpaywall links&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">force_open_url_update</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="o">=</span> <span class="n">Unpywall</span><span class="o">.</span><span class="n">get_pdf_link</span><span class="p">(</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">doi</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;re-using url from last unpaywall pull: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="si">}</span><span class="s2">..&quot;</span><span class="p">)</span>
+                <span class="n">sleep_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;unpaywall_downloader&#39;</span><span class="p">,</span> <span class="s1">&#39;re_used_direct_url_sleep_time&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sleep_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not available through unpaywall.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">not_available</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">not_available</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Attempting unpaywall download: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="si">}</span><span class="s2"> will download to </span><span class="si">{</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">generate_file_path</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">force_update_link_only</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">response</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_url_to_pdf_bin</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PDF_DIRECTORY</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">==</span> <span class="mi">503</span><span class="p">:</span>
+
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Likely cloudflare interception. &quot;</span><span class="p">)</span>
+                <span class="c1"># time.sleep(60)</span>
+
+                <span class="k">if</span> <span class="n">use_firefox_downloader</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_firefox_failure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">retry_firefox_failure</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;We have a firefox browser download failure; not retrying per config&quot;</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">Exception</span>
+                    <span class="n">firefox_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_firefox_downloader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="p">,</span> <span class="n">doi_entry</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">firefox_result</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">most_recent_firefox_failure</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                    <span class="k">return</span> <span class="n">firefox_result</span>
+
+        <span class="k">except</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Not available through unpaywall... </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unpaywall redirected to an html link, likely a redirect that requires a browser: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TimeoutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unpaywall timeout error attempting download: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ChunkedEncodingError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unpaywall encoding error attempting download: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">open_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unpaywall unexpected exception: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

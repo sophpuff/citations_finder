@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>downloader module &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">downloader module</a><ul>
+<li><a class="reference internal" href="#downloader.Downloader"><code class="docutils literal notranslate"><span class="pre">Downloader</span></code></a><ul>
+<li><a class="reference internal" href="#downloader.Downloader.TimeoutError"><code class="docutils literal notranslate"><span class="pre">Downloader.TimeoutError</span></code></a></li>
+<li><a class="reference internal" href="#downloader.Downloader.cleandir"><code class="docutils literal notranslate"><span class="pre">Downloader.cleandir()</span></code></a></li>
+<li><a class="reference internal" href="#downloader.Downloader.create_tables"><code class="docutils literal notranslate"><span class="pre">Downloader.create_tables()</span></code></a></li>
+<li><a class="reference internal" href="#downloader.Downloader.download"><code class="docutils literal notranslate"><span class="pre">Downloader.download()</span></code></a></li>
+<li><a class="reference internal" href="#downloader.Downloader.meets_datetime_requrements"><code class="docutils literal notranslate"><span class="pre">Downloader.meets_datetime_requrements()</span></code></a></li>
+<li><a class="reference internal" href="#downloader.Downloader.timeout"><code class="docutils literal notranslate"><span class="pre">Downloader.timeout()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">downloader module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/downloader.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-downloader">
+<span id="downloader-module"></span><h1>downloader module<a class="headerlink" href="#module-downloader" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="downloader.Downloader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">downloader.</span></span><span class="sig-name descname"><span class="pre">Downloader</span></span><a class="reference internal" href="_modules/downloader.html#Downloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="downloader.Downloader.TimeoutError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TimeoutError</span></span><a class="reference internal" href="_modules/downloader.html#Downloader.TimeoutError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader.TimeoutError" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="downloader.Downloader.cleandir">
+<span class="sig-name descname"><span class="pre">cleandir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/downloader.html#Downloader.cleandir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader.cleandir" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>_type_</em>) – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="downloader.Downloader.create_tables">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/downloader.html#Downloader.create_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader.create_tables" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="downloader.Downloader.download">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi_entry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/downloader.html#Downloader.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader.download" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>doi_entry</strong> (<em>_type_</em>) – _description_</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="downloader.Downloader.meets_datetime_requrements">
+<span class="sig-name descname"><span class="pre">meets_datetime_requrements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">most_recent_attempt_datetime</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/downloader.html#Downloader.meets_datetime_requrements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader.meets_datetime_requrements" title="Permalink to this definition"></a></dt>
+<dd><p>Check if the provided conditions meet the datetime requirements.
+If ‘retry_after_datetime’ in config.ini is newer/more recent than the 
+last attempt date, return False</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>section</strong> (<em>str</em>) – The configuration section to retrieve values from.</p></li>
+<li><p><strong>most_recent_attempt_datetime</strong> (<em>datetime.datetime</em><em> or </em><em>None</em>) – The datetime of the most recent attempt.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the conditions meet the datetime requirements, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="downloader.Downloader.timeout">
+<span class="sig-name descname"><span class="pre">timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'STREAM</span> <span class="pre">ioctl</span> <span class="pre">timeout'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/downloader.html#Downloader.timeout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#downloader.Downloader.timeout" title="Permalink to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seconds</strong> (<em>int</em><em>, </em><em>optional</em>) – _description_, defaults to 10</p></li>
+<li><p><strong>error_message</strong> (<em>_type_</em><em>, </em><em>optional</em>) – _description_, defaults to os.strerror(errno.ETIME)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

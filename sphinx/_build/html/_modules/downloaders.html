@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>downloaders &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">downloaders</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for downloaders</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">concurrent.futures</span>
+<span class="kn">from</span> <span class="nn">more_itertools</span> <span class="kn">import</span> <span class="n">grouper</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">doi_entry</span> <span class="kn">import</span> <span class="n">DoiEntry</span>
+
+<div class="viewcode-block" id="Downloaders"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders">[docs]</a><span class="k">class</span> <span class="nc">Downloaders</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;First, remove any &quot;unpaywall_cache&quot;. </span>
+<span class="sd">        Second, initialize an empty list &quot;self.downloaders&quot;. </span>
+<span class="sd">        Then, Loops over &quot;modules = [&quot;unpaywall_downloader&quot;]&quot;, and </span>
+<span class="sd">        split the text with &quot;_&quot;, turn into camel case.  </span>
+<span class="sd">        Lastly, retrieve the attribute of &quot;python_module&quot;, but use the camel case name</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;unpaywall_cache&quot;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s2">&quot;unpaywall_cache&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+        <span class="n">modules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_list</span><span class="p">(</span><span class="s1">&#39;downloaders&#39;</span><span class="p">,</span> <span class="s1">&#39;modules&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">downloaders</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
+            <span class="n">python_module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_import</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">camel_module</span> <span class="o">=</span> <span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ele</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">klass</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">python_module</span><span class="p">,</span> <span class="n">camel_module</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">downloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">klass</span><span class="p">())</span>
+
+<div class="viewcode-block" id="Downloaders.module_import"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders.module_import">[docs]</a>    <span class="k">def</span> <span class="nf">module_import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Imports and returns a module dynamically based on the provided module name.</span>
+
+<span class="sd">        :param module_name: The name of the module to import.</span>
+<span class="sd">        :type module_name: str</span>
+<span class="sd">        :return: The imported module.</span>
+<span class="sd">        :rtype: module</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="k">return</span> <span class="n">module</span></div>
+
+<div class="viewcode-block" id="Downloaders.download_list_parallel"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders.download_list_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">download_list_parallel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Uses ProcessPoolExecutor to download DOI entries from </span>
+<span class="sd">        the given list in parallel. It divides the DOI entries into groups using </span>
+<span class="sd">        the `grouper` function and submits each group to the executor</span>
+<span class="sd">        for parallel downloading. The number of parallel processes is set to 10.</span>
+
+<span class="sd">        :param doi_list: A list of DOIEntry objects representing the DOI entries to be downloaded.</span>
+<span class="sd">        :type doi_list: List[DOIEntry]</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">executor</span> <span class="o">=</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">download_list_serial</span><span class="p">,</span> <span class="n">group</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">grouper</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">doi_list</span><span class="p">)]</span>
+        <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">futures</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Downloaders.download_list"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders.download_list">[docs]</a>    <span class="k">def</span> <span class="nf">download_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Download DOI entries in the given list.</span>
+
+<span class="sd">    </span>
+<span class="sd">        It checks the configuration to determine whether to use the parallel downloader or the serial downloader.</span>
+<span class="sd">        If the parallel downloader is enabled, the method will invoke the `download_list_parallel` method.</span>
+<span class="sd">        Otherwise, it will use the `download_list_serial` method to download the DOI entries in serial order.</span>
+
+<span class="sd">        :param doi_list: A list of DOIEntry objects representing the DOI entries to be downloaded.</span>
+<span class="sd">        :type doi_list: List[DOIEntry]</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">parallel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;downloaders&#39;</span><span class="p">,</span> <span class="s1">&#39;parallel_downloader&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">download_list_parallel</span><span class="p">(</span><span class="n">doi_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">download_list_serial</span><span class="p">(</span><span class="n">doi_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Downloaders.download_list_serial"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders.download_list_serial">[docs]</a>    <span class="k">def</span> <span class="nf">download_list_serial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Download DOI entries in serial order.</span>
+
+<span class="sd">        This method downloads DOI entries from the given list in a serial (sequential) order.</span>
+<span class="sd">        It iterates through each DOI entry in the list and calls the `download` method on it.</span>
+<span class="sd">        If the download is successful, the DOI entry is marked as a successful download using</span>
+<span class="sd">        the `mark_successful_download` method.</span>
+
+<span class="sd">        :param doi_list: A list of DOIEntry objects representing the DOI entries to be downloaded.</span>
+<span class="sd">        :type doi_list: List[DOIEntry]</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+
+        <span class="k">for</span> <span class="n">doi_entry</span> <span class="ow">in</span> <span class="n">doi_list</span><span class="p">:</span>
+        <span class="c1"># logging.warning(f&quot;journal:{doi_entry.journal_title} not found: {doi_entry.not_found_count} doi: {doi_entry.doi}&quot;)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">):</span>
+                <span class="n">doi_instance</span> <span class="o">=</span> <span class="n">DoiEntry</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">)</span>
+                <span class="n">doi_instance</span><span class="o">.</span><span class="n">mark_successful_download</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Downloaders.download"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders.download">[docs]</a>    <span class="k">def</span> <span class="nf">download</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_entry</span><span class="p">:</span><span class="n">DoiEntry</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Download a DOI entry using downloader(s) specified in config.ini -&gt; </span>
+<span class="sd">        downloaders] -&gt; modules = [&quot;unpaywall_downloader&quot;]</span>
+
+<span class="sd">        :param doi_entry: The DOI entry to download.</span>
+<span class="sd">        :type doi_entry: DoiEntry</span>
+<span class="sd">        :type doi_entry: str</span>
+<span class="sd">        :return: True if the download is successful, False otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+
+<span class="sd">        Switched the order of &#39;if doi_entry.check_file()&#39; and &#39;if doi_entry.downloaded&#39;,</span>
+<span class="sd">        encountered a case &#39;download_single_doi = 10.1073/pnas.1719260115&#39; where it&#39;s marked </span>
+<span class="sd">        as downloaded in db but not downloaded to path. Should check_file first before check downloaded</span>
+<span class="sd">        &quot;&quot;&quot;</span>     
+        <span class="k">if</span> <span class="n">doi_entry</span><span class="o">.</span><span class="n">check_file</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PDF already downloaded; marking </span><span class="si">{</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2"> as downloaded &quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        
+        <span class="c1">#how does python know to look at the downloaded column in dois table?</span>
+        <span class="k">if</span> <span class="n">doi_entry</span><span class="o">.</span><span class="n">downloaded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;==================================================================&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting download: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2"> journal: </span><span class="si">{</span><span class="n">doi_entry</span><span class="o">.</span><span class="n">get_journal</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">downloader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaders</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">downloader</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Downloaders.create_tables"><a class="viewcode-back" href="../downloaders.html#downloaders.Downloaders.create_tables">[docs]</a>    <span class="k">def</span> <span class="nf">create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates tables for each downloader in the list of downloaders.</span>
+
+<span class="sd">        This method iterates over the downloaders and calls their respective &#39;create_tables&#39; methods.</span>
+<span class="sd">        Each downloader is responsible for creating its own required tables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>         
+         
+
+        <span class="k">for</span> <span class="n">downloader</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaders</span><span class="p">:</span>
+            <span class="n">downloader</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

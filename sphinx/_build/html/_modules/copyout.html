@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>copyout &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">copyout</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for copyout</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">db_connection</span> <span class="kn">import</span> <span class="n">DBConnection</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copyfile</span>
+<span class="kn">from</span> <span class="nn">utils_mixin</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">doi_database</span> <span class="kn">import</span> <span class="n">DoiDatabase</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<div class="viewcode-block" id="CopyOut"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut">[docs]</a><span class="k">class</span> <span class="nc">CopyOut</span><span class="p">(</span><span class="n">Utils</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">year</span> <span class="o">=</span> <span class="n">year</span>
+
+<div class="viewcode-block" id="CopyOut.get_matches"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut.get_matches">[docs]</a>    <span class="k">def</span> <span class="nf">get_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;executes query to retrieve rows from two tables - </span>
+<span class="sd">        matches, and doi - and keeps the row if doi exists in both </span>
+<span class="sd">        table and &#39;ignore&#39; column in &#39;matches&#39; table is 0.</span>
+
+<span class="sd">        :return: The query results containing matched rows.</span>
+<span class="sd">        :rtype: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select matches.doi, </span>
+<span class="s2">                    matches.collection,</span>
+<span class="s2">                    dois.full_path,</span>
+<span class="s2">                    dois.published_date,</span>
+<span class="s2">                    dois.journal_title, </span>
+<span class="s2">                    matches.date_added, </span>
+<span class="s2">                    matches.notes, </span>
+<span class="s2">                    matches.digital_only </span>
+<span class="s2">                    from matches, dois where matches.doi = dois.doi and </span>
+<span class="s2">                    matches.ignore = 0 and</span>
+<span class="s2">                    dois.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sql_year_restriction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="p">)</span><span class="si">}</span><span class="s2"> order by collection,dois.published_date&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="CopyOut.make_target_dir"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut.make_target_dir">[docs]</a>    <span class="k">def</span> <span class="nf">make_target_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest_dir</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates directories that are 3 layers deep,</span>
+<span class="sd">        &#39;publish&#39;, defined in config.ini -&gt; collection -&gt; year</span>
+
+<span class="sd">        :param dest_dir: directory (where main.py is stored)</span>
+<span class="sd">        :type dest_dir: str</span>
+<span class="sd">        :param collection: collections directory, i.e. botany, within dest_dir</span>
+<span class="sd">        :type collection: str</span>
+<span class="sd">        :return: year directory within collection_dir</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">)</span>
+
+        <span class="n">collection_dir</span> <span class="o">=</span> <span class="n">dest_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">collection_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">collection_dir</span><span class="p">)</span>
+        <span class="n">year_dir</span> <span class="o">=</span> <span class="n">collection_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">year_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">year_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">year_dir</span></div>
+
+    <span class="k">def</span> <span class="nf">_copy_out_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin_path</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">dest_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copies an origin file to the destination directory based on the given collection.</span>
+
+<span class="sd">        :param origin_path: The path of the origin file to be copied.</span>
+<span class="sd">        :type origin_path: str</span>
+<span class="sd">        :param collection: The name of the collection directory to copy the file into.</span>
+<span class="sd">        :type collection: str</span>
+<span class="sd">        :param dest_dir: The destination directory where the file will be copied.</span>
+<span class="sd">        :type dest_dir: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">target_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_target_dir</span><span class="p">(</span><span class="n">dest_dir</span><span class="p">,</span> <span class="n">collection</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">target_dir</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">origin_path</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New paper: </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">copyfile</span><span class="p">(</span><span class="n">origin_path</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CopyOut.copy_out_files"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut.copy_out_files">[docs]</a>    <span class="k">def</span> <span class="nf">copy_out_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest_dir</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copies files based on the matched rows retrieved from the </span>
+<span class="sd">        database, &#39;matches&#39; table.</span>
+<span class="sd">        Skips copying if the &#39;digital_only&#39; flag is True.</span>
+
+<span class="sd">        :param dest_dir: The destination directory where the files will be copied to, defaults to &quot;./&quot;</span>
+<span class="sd">        :type dest_dir: str, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">for</span> <span class="n">cur_match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_matches</span><span class="p">():</span>
+            <span class="n">collection</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">origin_path</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">notes</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">digital_only</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cur_match</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">digital_only</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_out_file</span><span class="p">(</span><span class="n">origin_path</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">dest_dir</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CopyOut.write_match"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut.write_match">[docs]</a>    <span class="k">def</span> <span class="nf">write_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cur_match</span><span class="p">,</span> <span class="n">filehandle</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a matched data record to a file.</span>
+
+<span class="sd">        The matached data record has 2 parts. The first part includes DOI. </span>
+<span class="sd">        The second part is &quot;identifier&quot; from &quot;matched_collectin_ids&quot; table in </span>
+<span class="sd">        the databse (example: cas 229582)</span>
+
+<span class="sd">        :param cur_match: A tuple containing matched data fields, including DOI, collection, origin_path,published_date, journal_title, date_added, notes, and digital_only.</span>
+<span class="sd">        :type cur_match: tuple</span>
+<span class="sd">        :param filehandle: The file handle where the matched data will be written.</span>
+<span class="sd">        :type filehandle: file</span>
+<span class="sd">        :param db: An instance of the DoiDatabase class used for retrieving DOI record information.</span>
+<span class="sd">        :type db: DoiDatabase</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">doi</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">doi_record</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get_doi</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">origin_path</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">published_date</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">journal_title</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">date_added</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">notes</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">digital_only</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_string</span><span class="p">(</span><span class="n">doi_record</span><span class="o">.</span><span class="n">get_title</span><span class="p">())</span>
+        <span class="n">write_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">collection</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">journal_title</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">published_date</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">date_added</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">notes</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">digital_only</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">write_string</span> <span class="o">=</span> <span class="n">write_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">filehandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">write_string</span><span class="p">)</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select identifier from matched_collection_ids where matched_collection_ids.doi=&#39;</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">filehandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">filehandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">filehandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">filehandle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CopyOut.dump_file_tsv"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut.dump_file_tsv">[docs]</a>    <span class="k">def</span> <span class="nf">dump_file_tsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump the matched data to a TSV file.</span>
+
+<span class="sd">        :param path: The directory path where the TSV file will be saved. Defaults to &quot;./&quot;.</span>
+<span class="sd">        :type path: str, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">DoiDatabase</span><span class="p">()</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/matched_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">.tsv&quot;</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;doi</span><span class="se">\t</span><span class="s2">collection</span><span class="se">\t</span><span class="s2">journal_title</span><span class="se">\t</span><span class="s2">title</span><span class="se">\t</span><span class="s2">published_date</span><span class="se">\t</span><span class="s2">date_added</span><span class="se">\t</span><span class="s2">notes</span><span class="se">\t</span><span class="s2">digital_only</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cur_match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_matches</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_match</span><span class="p">(</span><span class="n">cur_match</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CopyOut.dump_custom"><a class="viewcode-back" href="../copyout.html#copyout.CopyOut.dump_custom">[docs]</a>    <span class="k">def</span> <span class="nf">dump_custom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">special_note_string</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dump matched data (from found_scan_lines table in databsse) </span>
+<span class="sd">        with a special note to a TSV file.</span>
+
+<span class="sd">        :param special_note_string: A string representing the special note to filter matched data. These include: &quot;antcat&quot;, &quot;antweb&quot;, &quot;inaturalist&quot;, &quot;catalogue of fishes&quot;</span>
+<span class="sd">        :type special_note_string: str</span>
+<span class="sd">        :param path: The directory path where the TSV file will be saved.</span>
+<span class="sd">        :type path: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="n">db</span> <span class="o">=</span> <span class="n">DoiDatabase</span><span class="p">()</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/matched_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">special_note_string</span><span class="si">}</span><span class="s2">.tsv&quot;</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;doi</span><span class="se">\t</span><span class="s2">collection</span><span class="se">\t</span><span class="s2">journal_title</span><span class="se">\t</span><span class="s2">title</span><span class="se">\t</span><span class="s2">published_date</span><span class="se">\t</span><span class="s2">date_added</span><span class="se">\t</span><span class="s2">notes</span><span class="se">\t</span><span class="s2">digital_only</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">cur_match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_matches</span><span class="p">():</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select line from found_scan_lines where doi = &#39;</span><span class="si">{</span><span class="n">cur_match</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="n">scan_db_results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+            <span class="n">found_special_note</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">line_array</span> <span class="ow">in</span> <span class="n">scan_db_results</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">special_note_string</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                    <span class="n">found_special_note</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">found_special_note</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_match</span><span class="p">(</span><span class="n">cur_match</span><span class="p">,</span> <span class="n">fh</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+                <span class="n">origin_path</span> <span class="o">=</span> <span class="n">cur_match</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_copy_out_file</span><span class="p">(</span><span class="n">origin_path</span><span class="p">,</span> <span class="n">special_note_string</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

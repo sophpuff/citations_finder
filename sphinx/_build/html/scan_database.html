@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scan_database module &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">scan_database module</a><ul>
+<li><a class="reference internal" href="#scan_database.ScanDatabase"><code class="docutils literal notranslate"><span class="pre">ScanDatabase</span></code></a><ul>
+<li><a class="reference internal" href="#scan_database.ScanDatabase.create_tables"><code class="docutils literal notranslate"><span class="pre">ScanDatabase.create_tables()</span></code></a></li>
+<li><a class="reference internal" href="#scan_database.ScanDatabase.do_scan"><code class="docutils literal notranslate"><span class="pre">ScanDatabase.do_scan()</span></code></a></li>
+<li><a class="reference internal" href="#scan_database.ScanDatabase.scan_for_specimen_ids"><code class="docutils literal notranslate"><span class="pre">ScanDatabase.scan_for_specimen_ids()</span></code></a></li>
+<li><a class="reference internal" href="#scan_database.ScanDatabase.scan_pdfs"><code class="docutils literal notranslate"><span class="pre">ScanDatabase.scan_pdfs()</span></code></a></li>
+<li><a class="reference internal" href="#scan_database.ScanDatabase.scan_single_doi"><code class="docutils literal notranslate"><span class="pre">ScanDatabase.scan_single_doi()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">scan_database module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/scan_database.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-scan_database">
+<span id="scan-database-module"></span><h1>scan_database module<a class="headerlink" href="#module-scan_database" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="scan_database.ScanDatabase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scan_database.</span></span><span class="sig-name descname"><span class="pre">ScanDatabase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi_db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_scan_database</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scan_database.html#ScanDatabase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scan_database.ScanDatabase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scan_database.ScanDatabase.create_tables">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scan_database.html#ScanDatabase.create_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scan_database.ScanDatabase.create_tables" title="Permalink to this definition"></a></dt>
+<dd><p>Creates two database tables: “scans” and “found_scan_lines”. 
+It also includes an optional parameter reset_tables to determine 
+whether existing tables should be dropped before creating new ones</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset_tables</strong> – determine whether existing tables should be</p>
+</dd>
+</dl>
+<p>dropped before creating new ones, defaults to False
+:type reset_tables: bool, optional</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scan_database.ScanDatabase.do_scan">
+<span class="sig-name descname"><span class="pre">do_scan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scan_database.html#ScanDatabase.do_scan"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scan_database.ScanDatabase.do_scan" title="Permalink to this definition"></a></dt>
+<dd><p>Performs a scan on the provided DOI using the Scan class in scan.py</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>doi</strong> (<em>str</em>) – DOI</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scan_database.ScanDatabase.scan_for_specimen_ids">
+<span class="sig-name descname"><span class="pre">scan_for_specimen_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset_tables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scan_database.html#ScanDatabase.scan_for_specimen_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scan_database.ScanDatabase.scan_for_specimen_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Scans for specimen IDs in the matched documents and stores them in 
+the database table ‘matched_specimen_ids’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset_tables</strong> – If True, drops the ‘matched_specimen_ids’ table</p>
+</dd>
+</dl>
+<p>and recreates it, defaults to False.
+:type reset_tables: bool, optional</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scan_database.ScanDatabase.scan_pdfs">
+<span class="sig-name descname"><span class="pre">scan_pdfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scan_database.html#ScanDatabase.scan_pdfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scan_database.ScanDatabase.scan_pdfs" title="Permalink to this definition"></a></dt>
+<dd><p>Scans PDFs for DOIs within the specified year range. It retrieves DOIs that 
+have been downloaded but not yet scanned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_year</strong> (<em>int</em>) – The starting year of the range for which PDFs should be scanned.</p></li>
+<li><p><strong>end_year</strong> (<em>int</em>) – The ending year of the range for which PDFs should be scanned.</p></li>
+<li><p><strong>rescore</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag indicating whether to rescore previously scanned DOIs, defaults to False.</p></li>
+<li><p><strong>directory</strong> (<em>str</em><em>, </em><em>optional</em>) – The directory where the scanned PDFs should be saved, defaults to “./”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scan_database.ScanDatabase.scan_single_doi">
+<span class="sig-name descname"><span class="pre">scan_single_doi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scan_database.html#ScanDatabase.scan_single_doi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#scan_database.ScanDatabase.scan_single_doi" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

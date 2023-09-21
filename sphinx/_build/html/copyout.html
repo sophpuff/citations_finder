@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>copyout module &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">copyout module</a><ul>
+<li><a class="reference internal" href="#copyout.CopyOut"><code class="docutils literal notranslate"><span class="pre">CopyOut</span></code></a><ul>
+<li><a class="reference internal" href="#copyout.CopyOut.copy_out_files"><code class="docutils literal notranslate"><span class="pre">CopyOut.copy_out_files()</span></code></a></li>
+<li><a class="reference internal" href="#copyout.CopyOut.dump_custom"><code class="docutils literal notranslate"><span class="pre">CopyOut.dump_custom()</span></code></a></li>
+<li><a class="reference internal" href="#copyout.CopyOut.dump_file_tsv"><code class="docutils literal notranslate"><span class="pre">CopyOut.dump_file_tsv()</span></code></a></li>
+<li><a class="reference internal" href="#copyout.CopyOut.get_matches"><code class="docutils literal notranslate"><span class="pre">CopyOut.get_matches()</span></code></a></li>
+<li><a class="reference internal" href="#copyout.CopyOut.make_target_dir"><code class="docutils literal notranslate"><span class="pre">CopyOut.make_target_dir()</span></code></a></li>
+<li><a class="reference internal" href="#copyout.CopyOut.write_match"><code class="docutils literal notranslate"><span class="pre">CopyOut.write_match()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">copyout module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/copyout.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-copyout">
+<span id="copyout-module"></span><h1>copyout module<a class="headerlink" href="#module-copyout" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="copyout.CopyOut">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">copyout.</span></span><span class="sig-name descname"><span class="pre">CopyOut</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="copyout.CopyOut.copy_out_files">
+<span class="sig-name descname"><span class="pre">copy_out_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut.copy_out_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut.copy_out_files" title="Permalink to this definition"></a></dt>
+<dd><p>Copies files based on the matched rows retrieved from the 
+database, ‘matches’ table.
+Skips copying if the ‘digital_only’ flag is True.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dest_dir</strong> (<em>str</em><em>, </em><em>optional</em>) – The destination directory where the files will be copied to, defaults to “./”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="copyout.CopyOut.dump_custom">
+<span class="sig-name descname"><span class="pre">dump_custom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">special_note_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut.dump_custom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut.dump_custom" title="Permalink to this definition"></a></dt>
+<dd><p>Dump matched data (from found_scan_lines table in databsse) 
+with a special note to a TSV file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>special_note_string</strong> (<em>str</em>) – A string representing the special note to filter matched data. These include: “antcat”, “antweb”, “inaturalist”, “catalogue of fishes”</p></li>
+<li><p><strong>path</strong> (<em>str</em>) – The directory path where the TSV file will be saved.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="copyout.CopyOut.dump_file_tsv">
+<span class="sig-name descname"><span class="pre">dump_file_tsv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut.dump_file_tsv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut.dump_file_tsv" title="Permalink to this definition"></a></dt>
+<dd><p>Dump the matched data to a TSV file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em>, </em><em>optional</em>) – The directory path where the TSV file will be saved. Defaults to “./”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="copyout.CopyOut.get_matches">
+<span class="sig-name descname"><span class="pre">get_matches</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut.get_matches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut.get_matches" title="Permalink to this definition"></a></dt>
+<dd><p>executes query to retrieve rows from two tables - 
+matches, and doi - and keeps the row if doi exists in both 
+table and ‘ignore’ column in ‘matches’ table is 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The query results containing matched rows.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="copyout.CopyOut.make_target_dir">
+<span class="sig-name descname"><span class="pre">make_target_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dest_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut.make_target_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut.make_target_dir" title="Permalink to this definition"></a></dt>
+<dd><p>Creates directories that are 3 layers deep,
+‘publish’, defined in config.ini -&gt; collection -&gt; year</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dest_dir</strong> (<em>str</em>) – directory (where main.py is stored)</p></li>
+<li><p><strong>collection</strong> (<em>str</em>) – collections directory, i.e. botany, within dest_dir</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>year directory within collection_dir</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="copyout.CopyOut.write_match">
+<span class="sig-name descname"><span class="pre">write_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cur_match</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filehandle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/copyout.html#CopyOut.write_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#copyout.CopyOut.write_match" title="Permalink to this definition"></a></dt>
+<dd><p>Write a matched data record to a file.</p>
+<p>The matached data record has 2 parts. The first part includes DOI. 
+The second part is “identifier” from “matched_collectin_ids” table in 
+the databse (example: cas 229582)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cur_match</strong> (<em>tuple</em>) – A tuple containing matched data fields, including DOI, collection, origin_path,published_date, journal_title, date_added, notes, and digital_only.</p></li>
+<li><p><strong>filehandle</strong> (<em>file</em>) – The file handle where the matched data will be written.</p></li>
+<li><p><strong>db</strong> (<a class="reference internal" href="doi_database.html#doi_database.DoiDatabase" title="doi_database.DoiDatabase"><em>DoiDatabase</em></a>) – An instance of the DoiDatabase class used for retrieving DOI record information.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

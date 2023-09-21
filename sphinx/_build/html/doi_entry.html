@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doi_entry module &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">doi_entry module</a><ul>
+<li><a class="reference internal" href="#doi_entry.DoiEntry"><code class="docutils literal notranslate"><span class="pre">DoiEntry</span></code></a><ul>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.check_file"><code class="docutils literal notranslate"><span class="pre">DoiEntry.check_file()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.create_tables"><code class="docutils literal notranslate"><span class="pre">DoiEntry.create_tables()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.generate_file_path"><code class="docutils literal notranslate"><span class="pre">DoiEntry.generate_file_path()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.get_date"><code class="docutils literal notranslate"><span class="pre">DoiEntry.get_date()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.get_doi_date_string"><code class="docutils literal notranslate"><span class="pre">DoiEntry.get_doi_date_string()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.get_issn_list"><code class="docutils literal notranslate"><span class="pre">DoiEntry.get_issn_list()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.get_journal"><code class="docutils literal notranslate"><span class="pre">DoiEntry.get_journal()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.get_title"><code class="docutils literal notranslate"><span class="pre">DoiEntry.get_title()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.insert_database"><code class="docutils literal notranslate"><span class="pre">DoiEntry.insert_database()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.mark_successful_download"><code class="docutils literal notranslate"><span class="pre">DoiEntry.mark_successful_download()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.print"><code class="docutils literal notranslate"><span class="pre">DoiEntry.print()</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.DoiEntry.update_database"><code class="docutils literal notranslate"><span class="pre">DoiEntry.update_database()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#doi_entry.DoiFactory"><code class="docutils literal notranslate"><span class="pre">DoiFactory</span></code></a></li>
+<li><a class="reference internal" href="#doi_entry.EntryExistsException"><code class="docutils literal notranslate"><span class="pre">EntryExistsException</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">doi_entry module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/doi_entry.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-doi_entry">
+<span id="doi-entry-module"></span><h1>doi_entry module<a class="headerlink" href="#module-doi_entry" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doi_entry.</span></span><span class="sig-name descname"><span class="pre">DoiEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">setup_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doi_details</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.check_file">
+<span class="sig-name descname"><span class="pre">check_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.check_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.check_file" title="Permalink to this definition"></a></dt>
+<dd><p>Check whether designated file already exists in path. If so, 
+return True and update database. If otherwise, return False and 
+update database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em>, </em><em>optional</em>) – path to check for file existence, defaults to None</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if file exists in path, False otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.create_tables">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.create_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.create_tables" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a database table named “dois” if it doesn’t already exist. 
+The table includes columns: 
+doi(primary key), issn, published_date, ournal_title,downloaded, details, full_path</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.generate_file_path">
+<span class="sig-name descname"><span class="pre">generate_file_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.generate_file_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.generate_file_path" title="Permalink to this definition"></a></dt>
+<dd><p>Generates the full file path for saving the generated papers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em>, </em><em>optional</em>) – The base directory path that is ./pdf/issn#/year, defaults to None</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated full file path to the papers in pdf format.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.get_date">
+<span class="sig-name descname"><span class="pre">get_date</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.get_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.get_date" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.get_doi_date_string">
+<span class="sig-name descname"><span class="pre">get_doi_date_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.get_doi_date_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.get_doi_date_string" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.get_issn_list">
+<span class="sig-name descname"><span class="pre">get_issn_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.get_issn_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.get_issn_list" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.get_journal">
+<span class="sig-name descname"><span class="pre">get_journal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.get_journal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.get_journal" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.get_title">
+<span class="sig-name descname"><span class="pre">get_title</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.get_title"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.get_title" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.insert_database">
+<span class="sig-name descname"><span class="pre">insert_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.insert_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.insert_database" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.mark_successful_download">
+<span class="sig-name descname"><span class="pre">mark_successful_download</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.mark_successful_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.mark_successful_download" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the ‘downloaded’ attribute to True, 
+generates the full file path, and updates the database.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.print">
+<span class="sig-name descname"><span class="pre">print</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.print"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.print" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_entry.DoiEntry.update_database">
+<span class="sig-name descname"><span class="pre">update_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiEntry.update_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiEntry.update_database" title="Permalink to this definition"></a></dt>
+<dd><p>Update the dois table in database with the current object’s 
+details  using sql query</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="doi_entry.DoiFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doi_entry.</span></span><span class="sig-name descname"><span class="pre">DoiFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sql</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_entry.html#DoiFactory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.DoiFactory" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="doi_entry.EntryExistsException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doi_entry.</span></span><span class="sig-name descname"><span class="pre">EntryExistsException</span></span><a class="reference internal" href="_modules/doi_entry.html#EntryExistsException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_entry.EntryExistsException" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

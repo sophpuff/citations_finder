@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>validator module &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">validator module</a><ul>
+<li><a class="reference internal" href="#validator.Match"><code class="docutils literal notranslate"><span class="pre">Match</span></code></a><ul>
+<li><a class="reference internal" href="#validator.Match.generate_notes"><code class="docutils literal notranslate"><span class="pre">Match.generate_notes()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Match.open"><code class="docutils literal notranslate"><span class="pre">Match.open()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Match.print"><code class="docutils literal notranslate"><span class="pre">Match.print()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Match.print_matched_lines"><code class="docutils literal notranslate"><span class="pre">Match.print_matched_lines()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Match.replace_note"><code class="docutils literal notranslate"><span class="pre">Match.replace_note()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Match.update"><code class="docutils literal notranslate"><span class="pre">Match.update()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#validator.Validator"><code class="docutils literal notranslate"><span class="pre">Validator</span></code></a><ul>
+<li><a class="reference internal" href="#validator.Validator.analyze_title"><code class="docutils literal notranslate"><span class="pre">Validator.analyze_title()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.audit"><code class="docutils literal notranslate"><span class="pre">Validator.audit()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.audit_digital_only"><code class="docutils literal notranslate"><span class="pre">Validator.audit_digital_only()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.categorize_lineage"><code class="docutils literal notranslate"><span class="pre">Validator.categorize_lineage()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.copy_matches"><code class="docutils literal notranslate"><span class="pre">Validator.copy_matches()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.create_tables"><code class="docutils literal notranslate"><span class="pre">Validator.create_tables()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.get_lineage"><code class="docutils literal notranslate"><span class="pre">Validator.get_lineage()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.get_matched_paper_dois"><code class="docutils literal notranslate"><span class="pre">Validator.get_matched_paper_dois()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.prompt"><code class="docutils literal notranslate"><span class="pre">Validator.prompt()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.prompt_add_type"><code class="docutils literal notranslate"><span class="pre">Validator.prompt_add_type()</span></code></a></li>
+<li><a class="reference internal" href="#validator.Validator.prompt_digital"><code class="docutils literal notranslate"><span class="pre">Validator.prompt_digital()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">validator module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/validator.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-validator">
+<span id="validator-module"></span><h1>validator module<a class="headerlink" href="#module-validator" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="validator.Match">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">validator.</span></span><span class="sig-name descname"><span class="pre">Match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">published_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digital_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Match.generate_notes">
+<span class="sig-name descname"><span class="pre">generate_notes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match.generate_notes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match.generate_notes" title="Permalink to this definition"></a></dt>
+<dd><p>Generate and replace notes based on specified flagged terms in the scanned text.</p>
+<p>This method generates notes for a scanned document based on specific flagged terms that are found
+in the scanned text lines. It searches for predefined flagged terms such as ‘inaturalist’, ‘antweb’,
+‘antcat’, and ‘catalog of fishes’ within the scanned text lines associated with the DOI.</p>
+<p>The method retrieves lines and scores from the ‘found_scan_lines’ table in the database that match the
+given DOI. For each line, it checks whether any of the flagged terms are present. If a flagged term is
+found in a line, the corresponding flag is recorded in the ‘matches’ dictionary.</p>
+<p>After processing all the lines, the method constructs a list of matched flag notes from the ‘matches’ dictionary.
+These matched flag notes are then joined together using commas to create the final ‘notes’ string.</p>
+<p>Finally, the method uses the ‘replace_note’ method to replace the existing notes associated with the DOI
+with the newly generated notes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Match.open">
+<span class="sig-name descname"><span class="pre">open</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match.open"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match.open" title="Permalink to this definition"></a></dt>
+<dd><p>Open the associated PDF file using the default system PDF viewer.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Match.print">
+<span class="sig-name descname"><span class="pre">print</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match.print"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match.print" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Match.print_matched_lines">
+<span class="sig-name descname"><span class="pre">print_matched_lines</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match.print_matched_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match.print_matched_lines" title="Permalink to this definition"></a></dt>
+<dd><p>Print scanned lines with highlighted matched strings and their associated scores.</p>
+<p>This method retrieves the scanned lines along with their scores and matched strings from the
+‘found_scan_lines’ table in the database for a specific DOI. It then iterates through each line
+and processes the matched string and score to display the line with highlighted matched strings
+in different colors based on the score.</p>
+<p>The color of the highlighted matched string depends on the score value:
+- If the score is less than 0, the matched string is highlighted in magenta.
+- If the score is between 0 and 200, the matched string remains the default color.
+- If the score is greater than 200, the matched string is highlighted in yellow.
+- If the score is greater than 300, the matched string is highlighted in red.</p>
+<p>If a matched string is present in the line, the method replaces the matched string in the line with
+the highlighted version using the appropriate color. If the matched string is <cite>None</cite>, the method
+does not perform any replacement.</p>
+<p>Note: This method is useful for visually inspecting and highlighting matched strings in the scanned text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Match.replace_note">
+<span class="sig-name descname"><span class="pre">replace_note</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">notes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match.replace_note"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match.replace_note" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Match.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">digital_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Match.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Match.update" title="Permalink to this definition"></a></dt>
+<dd><p>Updates match records for the DOI entry in the database. It replaces existing records
+with new data and attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ignore</strong> (<em>bool</em>) – Indicates whether the DOI entry should be ignored, typically a boolean value.</p></li>
+<li><p><strong>collection</strong> (<em>str</em><em>, </em><em>optional</em>) – The collection associated with the DOI entry, defaults to None.</p></li>
+<li><p><strong>digital_only</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates whether the DOI entry is digital-only, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="validator.Validator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">validator.</span></span><span class="sig-name descname"><span class="pre">Validator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset_matches_database</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.analyze_title">
+<span class="sig-name descname"><span class="pre">analyze_title</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.analyze_title"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.analyze_title" title="Permalink to this definition"></a></dt>
+<dd><p>Analyzes a title to determine the relevant department based on taxonomy keywords.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> (<em>str</em>) – The title to analyze.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, display verbose information during analysis, defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.audit">
+<span class="sig-name descname"><span class="pre">audit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.audit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.audit" title="Permalink to this definition"></a></dt>
+<dd><p>Run a query that combines tables ‘scans’ and ‘dois’, 
+based on the ‘doi’ column. Then filter results based on 
+start_year and end_year, score not null and &gt;0, 
+and  doi not null. The resulting merged table is called 
+‘candidates’. Subsequently, rename the columns, 
+create  new object ‘Match’ using these columns
+and append to ‘matches’ list. Lastly, invoke ‘generate_notes’ 
+method on ‘matches’ list, and self.prompt 
+method of the current object, passing the current ‘match’ object as an argument</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_year</strong> (<em>int</em>) – interactive validate step start year</p></li>
+<li><p><strong>end_year</strong> (<em>int</em>) – interactive validate step end year</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.audit_digital_only">
+<span class="sig-name descname"><span class="pre">audit_digital_only</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.audit_digital_only"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.audit_digital_only" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.categorize_lineage">
+<span class="sig-name descname"><span class="pre">categorize_lineage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lineages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.categorize_lineage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.categorize_lineage" title="Permalink to this definition"></a></dt>
+<dd><p>Categorizes a given set of lineages into predefined departments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lineages</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – A list of lineages to categorize.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, display verbose matching information, defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The categorized department name, or None if no match is found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.copy_matches">
+<span class="sig-name descname"><span class="pre">copy_matches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.copy_matches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.copy_matches" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.create_tables">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_tables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset_matches_database</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.create_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.create_tables" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a database table named “matches” if it 
+doesn’t already exist. It also includes an optional parameter 
+reset_matches_database to determine whether the existing 
+“matches” table should be dropped before creating a new one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset_matches_database</strong> (<em>bool</em><em>, </em><em>optional</em>) – Determines whether the existing “matches” table should be dropped before creating a new one, defaults to False</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.get_lineage">
+<span class="sig-name descname"><span class="pre">get_lineage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">word</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.get_lineage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.get_lineage" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieves the taxonomic lineage of a given word (typically a taxonomic name) using the NCBI Taxonomy
+database. It uses the <cite>get_name_translator</cite> and <cite>get_lineage</cite> functions from the <cite>ncbi</cite> module to fetch the
+taxonomic lineage information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>word</strong> (<em>str</em>) – The word for which the taxonomic lineage needs to be retrieved.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, display additional verbose information, defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of taxonomic names representing the lineage of the given word.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.get_matched_paper_dois">
+<span class="sig-name descname"><span class="pre">get_matched_paper_dois</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.get_matched_paper_dois"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.get_matched_paper_dois" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.prompt">
+<span class="sig-name descname"><span class="pre">prompt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">match</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.prompt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.prompt" title="Permalink to this definition"></a></dt>
+<dd><p>Prompt the user for actions related to a given match.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>match</strong> (<a class="reference internal" href="#validator.Match" title="validator.Match"><em>Match</em></a>) – The match to prompt for.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.prompt_add_type">
+<span class="sig-name descname"><span class="pre">prompt_add_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">match</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.prompt_add_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.prompt_add_type" title="Permalink to this definition"></a></dt>
+<dd><p>Prompt the user to add a collection type to the given match.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>match</strong> (<a class="reference internal" href="#validator.Match" title="validator.Match"><em>Match</em></a>) – The match to add a collection type to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="validator.Validator.prompt_digital">
+<span class="sig-name descname"><span class="pre">prompt_digital</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">match</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/validator.html#Validator.prompt_digital"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#validator.Validator.prompt_digital" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

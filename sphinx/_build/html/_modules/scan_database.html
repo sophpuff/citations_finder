@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>scan_database &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">scan_database</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for scan_database</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">db_connection</span> <span class="kn">import</span> <span class="n">DBConnection</span>
+<span class="kn">from</span> <span class="nn">scan</span> <span class="kn">import</span> <span class="n">Scan</span>
+<span class="kn">from</span> <span class="nn">utils_mixin</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">from</span> <span class="nn">doi_database</span> <span class="kn">import</span> <span class="n">DoiFactory</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<div class="viewcode-block" id="ScanDatabase"><a class="viewcode-back" href="../scan_database.html#scan_database.ScanDatabase">[docs]</a><span class="k">class</span> <span class="nc">ScanDatabase</span><span class="p">(</span><span class="n">Utils</span><span class="p">):</span>
+
+    <span class="c1"># &quot;reset&quot; causes a the whole scan database to be rebuilt.</span>
+    <span class="c1"># required most of the time; it won&#39;t pick up new PDFs without it</span>
+    <span class="c1"># TODO: Command to scan all elements to ensure they have a scan object (7/7/22: this meant</span>
+    <span class="c1"># something to me when I wrote it, but no clue now. Expand or remove this comment.)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_db</span><span class="p">,</span> <span class="n">reset_scan_database</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">reset_scan_database</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_tables</span><span class="p">(</span><span class="n">reset_scan_database</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doi_db</span> <span class="o">=</span> <span class="n">doi_db</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cannot_convert</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;doi: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2"> Score: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> title: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;doi: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2"> Score: CONVERSION FAILURE title: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ScanDatabase.create_tables"><a class="viewcode-back" href="../scan_database.html#scan_database.ScanDatabase.create_tables">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_tables</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates two database tables: &quot;scans&quot; and &quot;found_scan_lines&quot;. </span>
+<span class="sd">        It also includes an optional parameter reset_tables to determine </span>
+<span class="sd">        whether existing tables should be dropped before creating new ones</span>
+
+<span class="sd">        :param reset_tables: determine whether existing tables should be </span>
+<span class="sd">        dropped before creating new ones, defaults to False</span>
+<span class="sd">        :type reset_tables: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="n">reset_tables</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;drop table scans&quot;</span>
+                <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">try</span><span class="p">:</span>
+
+                <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;drop table found_scan_lines&quot;</span>
+                <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="n">sql_create_database_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot; CREATE TABLE IF NOT EXISTS scans (</span>
+<span class="s2">                                            doi text primary key not null,</span>
+<span class="s2">                                            textfile_path text,</span>
+<span class="s2">                                            score integer,</span>
+<span class="s2">                                            cannot_convert boolean,</span>
+<span class="s2">                                            title text NOT NULL</span>
+<span class="s2">                                        ); &quot;&quot;&quot;</span>
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql_create_database_table</span><span class="p">)</span>
+
+        <span class="n">sql_create_database_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot; CREATE TABLE IF NOT EXISTS found_scan_lines (</span>
+<span class="s2">                                            doi text,</span>
+<span class="s2">                                            line text,</span>
+<span class="s2">                                            score integer,</span>
+<span class="s2">                                            matched_string text</span>
+<span class="s2">                                        ); &quot;&quot;&quot;</span>
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql_create_database_table</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ScanDatabase.scan_single_doi"><a class="viewcode-back" href="../scan_database.html#scan_database.ScanDatabase.scan_single_doi">[docs]</a>    <span class="k">def</span> <span class="nf">scan_single_doi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi</span><span class="p">):</span>
+        <span class="n">scan</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">doi_string</span><span class="o">=</span><span class="n">doi</span><span class="p">)</span>
+        <span class="n">scan</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="n">clear_existing_records</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scan</span></div>
+
+<div class="viewcode-block" id="ScanDatabase.do_scan"><a class="viewcode-back" href="../scan_database.html#scan_database.ScanDatabase.do_scan">[docs]</a>    <span class="k">def</span> <span class="nf">do_scan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Performs a scan on the provided DOI using the Scan class in scan.py</span>
+
+<span class="sd">        :param doi: DOI</span>
+<span class="sd">        :type doi: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">scan</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scan</span><span class="o">.</span><span class="n">score</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">scan</span><span class="o">.</span><span class="n">broken_converter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">scan</span><span class="o">.</span><span class="n">scan</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ScanDatabase.scan_pdfs"><a class="viewcode-back" href="../scan_database.html#scan_database.ScanDatabase.scan_pdfs">[docs]</a>    <span class="k">def</span> <span class="nf">scan_pdfs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">rescore</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scans PDFs for DOIs within the specified year range. It retrieves DOIs that </span>
+<span class="sd">        have been downloaded but not yet scanned.</span>
+
+<span class="sd">        :param start_year: The starting year of the range for which PDFs should be scanned.</span>
+<span class="sd">        :type start_year: int</span>
+
+<span class="sd">        :param end_year: The ending year of the range for which PDFs should be scanned.</span>
+<span class="sd">        :type end_year: int</span>
+
+<span class="sd">        :param rescore: Flag indicating whether to rescore previously scanned DOIs, defaults to False.</span>
+<span class="sd">        :type rescore: bool, optional</span>
+
+<span class="sd">        :param directory: The directory where the scanned PDFs should be saved, defaults to &quot;./&quot;.</span>
+<span class="sd">        :type directory: str, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rescore</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;SELECT * FROM dois LEFT JOIN scans ON dois.doi = scans.doi </span>
+<span class="s2">                WHERE downloaded = 1 and scans.doi IS NULL</span>
+<span class="s2">                and </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sql_year_restriction</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span><span class="w"> </span><span class="n">end_year</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+            <span class="n">dois</span> <span class="o">=</span> <span class="n">DoiFactory</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span><span class="o">.</span><span class="n">dois</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dois</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doi_db</span><span class="o">.</span><span class="n">get_dois</span><span class="p">(</span><span class="n">start_year</span><span class="o">=</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="o">=</span><span class="n">end_year</span><span class="p">,</span> <span class="n">journal_issn</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># multiprocessing verison:</span>
+        <span class="c1"># import multiprocessing as mp</span>
+        <span class="c1"># pool = mp.Pool(mp.cpu_count())</span>
+        <span class="c1"># results = pool.map(self.do_scan,dois)</span>
+
+        <span class="c1"># single process version</span>
+        <span class="k">for</span> <span class="n">doi_entry</span> <span class="ow">in</span> <span class="n">dois</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">do_scan</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ScanDatabase.scan_for_specimen_ids"><a class="viewcode-back" href="../scan_database.html#scan_database.ScanDatabase.scan_for_specimen_ids">[docs]</a>    <span class="k">def</span> <span class="nf">scan_for_specimen_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_tables</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scans for specimen IDs in the matched documents and stores them in </span>
+<span class="sd">        the database table &#39;matched_specimen_ids&#39;.</span>
+
+<span class="sd">        :param reset_tables: If True, drops the &#39;matched_specimen_ids&#39; table </span>
+<span class="sd">        and recreates it, defaults to False.</span>
+<span class="sd">        :type reset_tables: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="n">reset_tables</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;drop table matched_specimen_ids&quot;</span>
+            <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+        <span class="n">sql_create_database_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot; CREATE TABLE IF NOT EXISTS matched_specimen_ids (</span>
+<span class="s2">                                            doi text,</span>
+<span class="s2">                                            identifier text</span>
+<span class="s2">                                        ); &quot;&quot;&quot;</span>
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql_create_database_table</span><span class="p">)</span>
+        <span class="n">select_dois</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select doi from matches where ignore = 0&quot;&quot;&quot;</span>
+        <span class="n">matched_dois</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">select_dois</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">doi</span> <span class="ow">in</span> <span class="n">matched_dois</span><span class="p">:</span>
+            <span class="n">doi</span> <span class="o">=</span> <span class="n">doi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">scan</span> <span class="o">=</span> <span class="n">Scan</span><span class="p">(</span><span class="n">doi_string</span><span class="o">=</span><span class="n">doi</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">scan</span><span class="o">.</span><span class="n">scan_specimen_ids</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+                <span class="c1"># logging.info(f&quot;Title: {scan.title}&quot;)</span>
+                <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                    <span class="n">sql_insert</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;insert into matched_specimen_ids (doi, identifier) VALUES (?,?)&quot;&quot;&quot;</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">):</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">doi</span><span class="p">,</span>
+                            <span class="n">result</span><span class="p">]</span>
+                    <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql_insert</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div></div>
+                    <span class="c1"># if &#39;-&#39; in result:</span>
+                    <span class="c1">#     logging.debug(f&quot;doi: {doi} title: {scan.title}&quot;)</span>
+                    <span class="c1">#     logging.debug(f&quot; Got bad: {result}&quot;)</span>
+
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

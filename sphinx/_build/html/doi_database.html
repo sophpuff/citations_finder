@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doi_database module &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">doi_database module</a><ul>
+<li><a class="reference internal" href="#doi_database.DoiDatabase"><code class="docutils literal notranslate"><span class="pre">DoiDatabase</span></code></a><ul>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.download_dois"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.download_dois()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.download_dois_by_journal_size"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.download_dois_by_journal_size()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.download_issn"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.download_issn()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.ensure_downloaded_has_pdf"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.ensure_downloaded_has_pdf()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.force_crossref_update"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.force_crossref_update()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.get_doi"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.get_doi()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.get_dois"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.get_dois()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.headers"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.headers</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.import_pdfs"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.import_pdfs()</span></code></a></li>
+<li><a class="reference internal" href="#doi_database.DoiDatabase.is_downloaded"><code class="docutils literal notranslate"><span class="pre">DoiDatabase.is_downloaded()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#doi_database.RetriesExceededException"><code class="docutils literal notranslate"><span class="pre">RetriesExceededException</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">doi_database module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/doi_database.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-doi_database">
+<span id="doi-database-module"></span><h1>doi_database module<a class="headerlink" href="#module-doi_database" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doi_database.</span></span><span class="sig-name descname"><span class="pre">DoiDatabase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="utils_mixin.html#utils_mixin.Utils" title="utils_mixin.Utils"><code class="xref py py-class docutils literal notranslate"><span class="pre">Utils</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.download_dois">
+<span class="sig-name descname"><span class="pre">download_dois</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">journal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">issn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.download_dois"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.download_dois" title="Permalink to this definition"></a></dt>
+<dd><p>Download DOI entries based on specified criteria.</p>
+<p>It first generates an SQL query to select the DOI entries from the database based on
+the given start year, end year, and ISSN (International Standard Serial Number).
+It then creates an instance of the Downloaders class to handle the downloading process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_year</strong> (<em>int</em>) – The starting year of the date range for selecting DOI entries.</p></li>
+<li><p><strong>end_year</strong> (<em>int</em>) – The ending year of the date range for selecting DOI entries.</p></li>
+<li><p><strong>journal</strong> (<em>str</em><em> or </em><em>None</em>) – The journal name used as a filter for DOI entries, or None for all journals.</p></li>
+<li><p><strong>issn</strong> (<em>bool</em>) – The ISSN (International Standard Serial Number) used as a filter for DOI entries. If True, the ISSN will be used to filter DOI entries; if False, it will not be used for filtering.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.download_dois_by_journal_size">
+<span class="sig-name descname"><span class="pre">download_dois_by_journal_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.download_dois_by_journal_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.download_dois_by_journal_size" title="Permalink to this definition"></a></dt>
+<dd><p>Selects journals with a specified time range and retrieves a list of journals
+along with their ISSN and the number of DOIs associated with each journal. It then proceeds 
+to attempt downloads for each journal based on their size, i.e., the number of DOIs they have,
+from journal with least DOIs to most DOIs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_year</strong> (<em>int</em>) – The start year for the time range to consider.</p></li>
+<li><p><strong>end_year</strong> (<em>int</em>) – The end year for the time range to consider.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.download_issn">
+<span class="sig-name descname"><span class="pre">download_issn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">issn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.download_issn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.download_issn" title="Permalink to this definition"></a></dt>
+<dd><p>Download data for a specific ISSN from a given start year to an end year
+using crossref API. The downloaded data is not explicitly stored or saved to a 
+specific location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>issn</strong> (<em>str</em>) – The ISSN of the journal</p></li>
+<li><p><strong>start_year</strong> (<em>str</em>) – The start year for filtering the data</p></li>
+<li><p><strong>end_year</strong> (<em>str</em>) – The end year for filtering the data</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.ensure_downloaded_has_pdf">
+<span class="sig-name descname"><span class="pre">ensure_downloaded_has_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.ensure_downloaded_has_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.ensure_downloaded_has_pdf" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if an DOI’s associated PDF file exists, then updates the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_year</strong> (<em>int</em>) – The starting year of the date range.</p></li>
+<li><p><strong>end_year</strong> (<em>int</em>) – The ending year of the date range.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.force_crossref_update">
+<span class="sig-name descname"><span class="pre">force_crossref_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.force_crossref_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.force_crossref_update" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieves journals from the database and performs a forced update
+for the specified <cite>start_year</cite> defined in config.ini ‘force_update_year = xxxx’ 
+by downloading data from Crossref</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_year</strong> (<em>int</em>) – The start year for the update, defined in config.ini as ‘force_update_year = xxxx’</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.get_doi">
+<span class="sig-name descname"><span class="pre">get_doi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.get_doi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.get_doi" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.get_dois">
+<span class="sig-name descname"><span class="pre">get_dois</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">journal_issn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.get_dois"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.get_dois" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Get DOI entries from the database where downloaded column is marked as True</dt><dd><p>within the specified date range</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_year</strong> (<em>int</em>) – The starting year of the date range.</p></li>
+<li><p><strong>end_year</strong> (<em>int</em>) – The ending year of the date range.</p></li>
+<li><p><strong>journal_issn</strong> (<em>str</em><em>, </em><em>optional</em>) – The ISSN (International Standard Serial Number) of the journal to filter the results, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of DOI entries that match the specified criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="doi_entry.html#doi_entry.DoiEntry" title="doi_entry.DoiEntry">DoiEntry</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.headers">
+<span class="sig-name descname"><span class="pre">headers</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'User-Agent':</span> <span class="pre">'development;</span> <span class="pre">mailto:jrussack&#64;calacademy.org'}</span></em><a class="headerlink" href="#doi_database.DoiDatabase.headers" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.import_pdfs">
+<span class="sig-name descname"><span class="pre">import_pdfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_exception_if_exist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.import_pdfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.import_pdfs" title="Permalink to this definition"></a></dt>
+<dd><p>Import PDFs and build database entries based on their metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> (<em>str</em><em>, </em><em>optional</em>) – The directory path where the PDF files are located, defaults to “./”</p></li>
+<li><p><strong>raise_exception_if_exist</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag indicating whether to raise an exception if the DOI already exists in the database, defaults to True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doi_database.DoiDatabase.is_downloaded">
+<span class="sig-name descname"><span class="pre">is_downloaded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doi_entry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doi_database.html#DoiDatabase.is_downloaded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.DoiDatabase.is_downloaded" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="doi_database.RetriesExceededException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doi_database.</span></span><span class="sig-name descname"><span class="pre">RetriesExceededException</span></span><a class="reference internal" href="_modules/doi_database.html#RetriesExceededException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doi_database.RetriesExceededException" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

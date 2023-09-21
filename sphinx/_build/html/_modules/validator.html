@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>validator &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">validator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for validator</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">db_connection</span> <span class="kn">import</span> <span class="n">DBConnection</span>
+<span class="kn">from</span> <span class="nn">utils_mixin</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">colorama</span> <span class="kn">import</span> <span class="n">Fore</span><span class="p">,</span> <span class="n">Back</span><span class="p">,</span> <span class="n">Style</span>
+<span class="kn">from</span> <span class="nn">ete3</span> <span class="kn">import</span> <span class="n">NCBITaxa</span>
+<span class="kn">from</span> <span class="nn">scan</span> <span class="kn">import</span> <span class="n">Scan</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">ncbi</span> <span class="o">=</span> <span class="n">NCBITaxa</span><span class="p">()</span>
+
+
+<span class="c1"># ncbi.update_taxonomy_database()</span>
+
+
+<span class="c1"># f&quot;{Fore.MAGENTA + self.chromosome.id + Fore.WHITE}:&quot; \</span>
+<div class="viewcode-block" id="Match"><a class="viewcode-back" href="../validator.html#validator.Match">[docs]</a><span class="k">class</span> <span class="nc">Match</span><span class="p">(</span><span class="n">Utils</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">full_path</span><span class="p">,</span> <span class="n">published_date</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">digital_only</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="n">doi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="n">score</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">published_date</span> <span class="o">=</span> <span class="n">published_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">full_path</span> <span class="o">=</span> <span class="n">full_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notes</span> <span class="o">=</span> <span class="n">notes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">digital_only</span> <span class="o">=</span> <span class="n">digital_only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collection</span> <span class="o">=</span> <span class="n">collection</span>
+
+<div class="viewcode-block" id="Match.generate_notes"><a class="viewcode-back" href="../validator.html#validator.Match.generate_notes">[docs]</a>    <span class="k">def</span> <span class="nf">generate_notes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate and replace notes based on specified flagged terms in the scanned text.</span>
+
+<span class="sd">        This method generates notes for a scanned document based on specific flagged terms that are found</span>
+<span class="sd">        in the scanned text lines. It searches for predefined flagged terms such as &#39;inaturalist&#39;, &#39;antweb&#39;,</span>
+<span class="sd">        &#39;antcat&#39;, and &#39;catalog of fishes&#39; within the scanned text lines associated with the DOI.</span>
+
+<span class="sd">        The method retrieves lines and scores from the &#39;found_scan_lines&#39; table in the database that match the</span>
+<span class="sd">        given DOI. For each line, it checks whether any of the flagged terms are present. If a flagged term is</span>
+<span class="sd">        found in a line, the corresponding flag is recorded in the &#39;matches&#39; dictionary.</span>
+
+<span class="sd">        After processing all the lines, the method constructs a list of matched flag notes from the &#39;matches&#39; dictionary.</span>
+<span class="sd">        These matched flag notes are then joined together using commas to create the final &#39;notes&#39; string.</span>
+
+<span class="sd">        Finally, the method uses the &#39;replace_note&#39; method to replace the existing notes associated with the DOI</span>
+<span class="sd">        with the newly generated notes.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+
+        <span class="n">flag_notes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;inaturalist&#39;</span><span class="p">,</span> <span class="s1">&#39;antweb&#39;</span><span class="p">,</span> <span class="s1">&#39;antcat&#39;</span><span class="p">,</span> <span class="s1">&#39;catalog of fishes&#39;</span><span class="p">]</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select line,score from found_scan_lines where doi = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">matched_line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">flag_note</span> <span class="ow">in</span> <span class="n">flag_notes</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">flag_note</span> <span class="ow">in</span> <span class="n">matched_line</span><span class="p">:</span>
+                    <span class="n">matches</span><span class="p">[</span><span class="n">flag_note</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">match_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">flag_note</span> <span class="ow">in</span> <span class="n">matches</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">match_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flag_note</span><span class="p">)</span>
+        <span class="n">notes</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">match_list</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace_note</span><span class="p">(</span><span class="n">notes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Match.replace_note"><a class="viewcode-back" href="../validator.html#validator.Match.replace_note">[docs]</a>    <span class="k">def</span> <span class="nf">replace_note</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">notes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notes</span> <span class="o">=</span> <span class="n">notes</span></div>
+
+<div class="viewcode-block" id="Match.print"><a class="viewcode-back" href="../validator.html#validator.Match.print">[docs]</a>    <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Score: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> title: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;doi: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2"> date:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">published_date</span><span class="si">}</span><span class="s2"> path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">full_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">notes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Notes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">digital_only</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">digital_only</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;digital_only: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">digital_only</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Match.print_matched_lines"><a class="viewcode-back" href="../validator.html#validator.Match.print_matched_lines">[docs]</a>    <span class="k">def</span> <span class="nf">print_matched_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print scanned lines with highlighted matched strings and their associated scores.</span>
+
+<span class="sd">        This method retrieves the scanned lines along with their scores and matched strings from the</span>
+<span class="sd">        &#39;found_scan_lines&#39; table in the database for a specific DOI. It then iterates through each line</span>
+<span class="sd">        and processes the matched string and score to display the line with highlighted matched strings</span>
+<span class="sd">        in different colors based on the score.</span>
+
+<span class="sd">        The color of the highlighted matched string depends on the score value:</span>
+<span class="sd">        - If the score is less than 0, the matched string is highlighted in magenta.</span>
+<span class="sd">        - If the score is between 0 and 200, the matched string remains the default color.</span>
+<span class="sd">        - If the score is greater than 200, the matched string is highlighted in yellow.</span>
+<span class="sd">        - If the score is greater than 300, the matched string is highlighted in red.</span>
+
+<span class="sd">        If a matched string is present in the line, the method replaces the matched string in the line with</span>
+<span class="sd">        the highlighted version using the appropriate color. If the matched string is `None`, the method</span>
+<span class="sd">        does not perform any replacement.</span>
+
+<span class="sd">        Note: This method is useful for visually inspecting and highlighting matched strings in the scanned text.</span>
+
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select line,score,matched_string from found_scan_lines where doi = &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="n">matched_line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">Fore</span><span class="o">.</span><span class="n">BLUE</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">matched</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">Fore</span><span class="o">.</span><span class="n">MAGENTA</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="mi">200</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">Fore</span><span class="o">.</span><span class="n">YELLOW</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="mi">300</span><span class="p">:</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">Fore</span><span class="o">.</span><span class="n">RED</span>
+
+            <span class="c1"># we have a case where &quot;matched&quot; is none</span>
+            <span class="k">if</span> <span class="n">matched</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">matched_line</span> <span class="o">=</span> <span class="n">matched_line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">matched</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">color</span><span class="si">}{</span><span class="n">matched</span><span class="si">}{</span><span class="n">Fore</span><span class="o">.</span><span class="n">RESET</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error case - debug me! Missing payload matched, root case this. </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># what do we want to do if matched string is not None?</span>
+                <span class="k">pass</span>
+            <span class="c1"># logging.debug(f&quot;    {regex_tuple[0]}\t{matched_line}&quot;)</span>
+
+            <span class="c1"># matched_line = matched_line.replace(&#39;california&#39;,f&#39;{Fore.MAGENTA}california{Fore.RESET}&#39;)</span>
+            <span class="c1"># matched_line = matched_line.replace(&#39;cas&#39;,f&#39;{Fore.RED}cas{Fore.RESET}&#39;)</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">matched_line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Match.open"><a class="viewcode-back" href="../validator.html#validator.Match.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Open the associated PDF file using the default system PDF viewer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;/usr/bin/open&quot;</span>
+        <span class="n">pwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">pdf_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pwd</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">full_path</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="n">command</span><span class="p">,</span> <span class="n">pdf_file</span><span class="p">])</span></div>
+
+    <span class="c1"># Ignore is for papers that aren&#39;t correct matches</span>
+<div class="viewcode-block" id="Match.update"><a class="viewcode-back" href="../validator.html#validator.Match.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">digital_only</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates match records for the DOI entry in the database. It replaces existing records</span>
+<span class="sd">        with new data and attributes.</span>
+
+<span class="sd">        :param ignore: Indicates whether the DOI entry should be ignored, typically a boolean value.</span>
+<span class="sd">        :type ignore: bool</span>
+<span class="sd">        :param collection: The collection associated with the DOI entry, defaults to None.</span>
+<span class="sd">        :type collection: str, optional</span>
+<span class="sd">        :param digital_only: Indicates whether the DOI entry is digital-only, defaults to None.</span>
+<span class="sd">        :type digital_only: bool, optional</span>
+<span class="sd">        :return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c1">#  for updating match records</span>
+        <span class="c1"># sql = f&quot;&quot;&quot;delete from matches where doi=&#39;{self.doi}&#39;&quot;&quot;&quot;</span>
+        <span class="c1"># DBConnection.execute_query(sql)</span>
+        <span class="k">if</span> <span class="n">digital_only</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">digital_only</span> <span class="o">=</span> <span class="n">digital_only</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot; replace into matches (doi,collection,ignore,date_added,notes,digital_only) values (?,?,?,?,?,?)&quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">digital_only</span><span class="p">]</span>
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Validator"><a class="viewcode-back" href="../validator.html#validator.Validator">[docs]</a><span class="k">class</span> <span class="nc">Validator</span><span class="p">(</span><span class="n">Utils</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_matches_database</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_tables</span><span class="p">(</span><span class="n">reset_matches_database</span><span class="o">=</span><span class="n">reset_matches_database</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Validator.get_matched_paper_dois"><a class="viewcode-back" href="../validator.html#validator.Validator.get_matched_paper_dois">[docs]</a>    <span class="k">def</span> <span class="nf">get_matched_paper_dois</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select doi from matches where ignore=FALSE&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Validator.create_tables"><a class="viewcode-back" href="../validator.html#validator.Validator.create_tables">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">create_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_matches_database</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a database table named &quot;matches&quot; if it </span>
+<span class="sd">        doesn&#39;t already exist. It also includes an optional parameter </span>
+<span class="sd">        reset_matches_database to determine whether the existing </span>
+<span class="sd">        &quot;matches&quot; table should be dropped before creating a new one.</span>
+
+<span class="sd">        :param reset_matches_database: Determines whether the existing &quot;matches&quot; table should be dropped before creating a new one, defaults to False</span>
+<span class="sd">        :type reset_matches_database: bool, optional</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">if</span> <span class="n">reset_matches_database</span><span class="p">:</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;drop table matches&quot;</span>
+            <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">sql_create_database_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot; CREATE TABLE IF NOT EXISTS matches (</span>
+<span class="s2">                                                doi text primary key NOT NULL,</span>
+<span class="s2">                                                collection text,</span>
+<span class="s2">                                                ignore boolean,</span>
+<span class="s2">                                                date_added DATE,</span>
+<span class="s2">                                                notes text,</span>
+<span class="s2">                                                digital_only boolean</span>
+<span class="s2">                                            ); &quot;&quot;&quot;</span>
+
+        <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql_create_database_table</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Validator.copy_matches"><a class="viewcode-back" href="../validator.html#validator.Validator.copy_matches">[docs]</a>    <span class="k">def</span> <span class="nf">copy_matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;select dois.doi, dois.full_path, dois.published_date from dois,matches,scans</span>
+<span class="s2">                                    where</span>
+<span class="s2">                                    matches.doi = dois.doi and matches.ignore=FALSE&quot;&quot;&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">doi</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">full_path</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="sa">f</span><span class="s2">&quot;cp full_path </span><span class="si">{</span><span class="n">target_dir</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">command</span> <span class="o">=</span> <span class="s2">&quot;/bin/cp&quot;</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">([</span><span class="n">command</span><span class="p">,</span> <span class="n">full_path</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Validator.audit"><a class="viewcode-back" href="../validator.html#validator.Validator.audit">[docs]</a>    <span class="k">def</span> <span class="nf">audit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a query that combines tables &#39;scans&#39; and &#39;dois&#39;, </span>
+<span class="sd">        based on the &#39;doi&#39; column. Then filter results based on </span>
+<span class="sd">        start_year and end_year, score not null and &gt;0, </span>
+<span class="sd">        and  doi not null. The resulting merged table is called </span>
+<span class="sd">        &#39;candidates&#39;. Subsequently, rename the columns, </span>
+<span class="sd">        create  new object &#39;Match&#39; using these columns</span>
+<span class="sd">        and append to &#39;matches&#39; list. Lastly, invoke &#39;generate_notes&#39; </span>
+<span class="sd">        method on &#39;matches&#39; list, and self.prompt </span>
+<span class="sd">        method of the current object, passing the current &#39;match&#39; object as an argument</span>
+
+<span class="sd">        :param start_year: interactive validate step start year</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: interactive validate step end year</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select dois.doi, dois.full_path, dois.published_date, scans.title, scans.score from scans,dois</span>
+<span class="s2">                                    left join matches m on dois.doi = m.doi</span>
+<span class="s2">                                    where</span>
+<span class="s2">                                    scans.doi = dois.doi and</span>
+<span class="s2">                                    dois.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sql_year_restriction</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span><span class="w"> </span><span class="n">end_year</span><span class="p">)</span><span class="si">}</span><span class="s2"> and</span>
+<span class="s2">                                    scans.score is not null and</span>
+<span class="s2">                                    m.doi is NULL and</span>
+<span class="s2">                                    score &gt; 0</span>
+<span class="s2">                                    order by score desc &quot;&quot;&quot;</span>
+        
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">doi</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">full_path</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">published_date</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Match</span><span class="p">(</span><span class="n">doi</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">full_path</span><span class="p">,</span> <span class="n">published_date</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">:</span>
+            <span class="k">match</span><span class="o">.</span><span class="n">generate_notes</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span><span class="p">(</span><span class="n">match</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Validator.audit_digital_only"><a class="viewcode-back" href="../validator.html#validator.Validator.audit_digital_only">[docs]</a>    <span class="k">def</span> <span class="nf">audit_digital_only</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select dois.doi, matches.collection, dois.full_path, dois.published_date, scans.title, scans.score, matches.notes</span>
+<span class="s2">                    from scans,</span>
+<span class="s2">                         dois,</span>
+<span class="s2">                         matches</span>
+<span class="s2">                             left join matches m on dois.doi = m.doi</span>
+<span class="s2">                    where matches.doi = scans.doi</span>
+<span class="s2">                      and scans.doi = dois.doi</span>
+<span class="s2">                      and matches.digital_only is NULL</span>
+<span class="s2">                      and dois.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sql_year_restriction</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span><span class="w"> </span><span class="n">end_year</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span>
+<span class="s2">                      and scans.score is not null</span>
+<span class="s2">                      and length(matches.notes) &gt; 0</span>
+<span class="s2">                      and score &gt; 0</span>
+<span class="s2">                    order by score desc</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">doi</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">collection</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">full_path</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">published_date</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">notes</span> <span class="o">=</span> <span class="n">candidate</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Match</span><span class="p">(</span><span class="n">doi</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">full_path</span><span class="p">,</span> <span class="n">published_date</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="n">notes</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="n">collection</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matches</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prompt_digital</span><span class="p">(</span><span class="n">match</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Validator.get_lineage"><a class="viewcode-back" href="../validator.html#validator.Validator.get_lineage">[docs]</a>    <span class="k">def</span> <span class="nf">get_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">word</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieves the taxonomic lineage of a given word (typically a taxonomic name) using the NCBI Taxonomy</span>
+<span class="sd">        database. It uses the `get_name_translator` and `get_lineage` functions from the `ncbi` module to fetch the</span>
+<span class="sd">        taxonomic lineage information.</span>
+
+<span class="sd">        :param word: The word for which the taxonomic lineage needs to be retrieved.</span>
+<span class="sd">        :type word: str</span>
+<span class="sd">        :param verbose: If True, display additional verbose information, defaults to False.</span>
+<span class="sd">        :type verbose: bool, optional</span>
+<span class="sd">        :return: A list of taxonomic names representing the lineage of the given word.</span>
+<span class="sd">        :rtype: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">name2taxid</span> <span class="o">=</span> <span class="n">ncbi</span><span class="o">.</span><span class="n">get_name_translator</span><span class="p">([</span><span class="n">word</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name2taxid</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Word: </span><span class="si">{</span><span class="n">word</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">name2taxid</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">name2taxid</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">taxid</span> <span class="o">=</span> <span class="n">name2taxid</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># logging.debug(f&quot;   taxid: {taxid}&quot;)</span>
+        <span class="n">lineage</span> <span class="o">=</span> <span class="n">ncbi</span><span class="o">.</span><span class="n">get_lineage</span><span class="p">(</span><span class="n">taxid</span><span class="p">)</span>
+        <span class="n">names_dict</span> <span class="o">=</span> <span class="n">ncbi</span><span class="o">.</span><span class="n">get_taxid_translator</span><span class="p">(</span><span class="n">lineage</span><span class="p">)</span>
+        <span class="n">lineage_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">names_dict</span><span class="p">[</span><span class="n">taxid</span><span class="p">]</span> <span class="k">for</span> <span class="n">taxid</span> <span class="ow">in</span> <span class="n">lineage</span><span class="p">]</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">lineage_names</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">names</span></div>
+
+<div class="viewcode-block" id="Validator.categorize_lineage"><a class="viewcode-back" href="../validator.html#validator.Validator.categorize_lineage">[docs]</a>    <span class="k">def</span> <span class="nf">categorize_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lineages</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Categorizes a given set of lineages into predefined departments.</span>
+
+<span class="sd">        :param lineages: A list of lineages to categorize.</span>
+<span class="sd">        :type lineages: list[str]</span>
+<span class="sd">        :param verbose: If True, display verbose matching information, defaults to False.</span>
+<span class="sd">        :type verbose: bool, optional</span>
+<span class="sd">        :return: The categorized department name, or None if no match is found.</span>
+<span class="sd">        :rtype: str or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c1"># lanka matching to ento, incorrect</span>
+        <span class="c1"># Matching insecta to entomology via lineage: [&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;bilateria&#39;, &#39;protostomia&#39;, &#39;ecdysozoa&#39;, &#39;panarthropoda&#39;, &#39;arthropoda&#39;, &#39;mandibulata&#39;, &#39;pancrustacea&#39;, &#39;hexapoda&#39;, &#39;insecta&#39;, &#39;dicondylia&#39;, &#39;pterygota&#39;, &#39;neoptera&#39;, &#39;endopterygota&#39;, &#39;coleoptera&#39;, &#39;polyphaga&#39;, &#39;cucujiformia&#39;, &#39;chrysomeloidea&#39;, &#39;chrysomelidae&#39;, &#39;galerucinae&#39;, &#39;alticini&#39;, &#39;lanka&#39;]</span>
+        <span class="c1"># It&#39;s in entomology</span>
+        <span class="c1">#   Lineage:[&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;bilateria&#39;, &#39;protostomia&#39;, &#39;ecdysozoa&#39;, &#39;panarthropoda&#39;, &#39;arthropoda&#39;, &#39;mandibulata&#39;, &#39;pancrustacea&#39;, &#39;hexapoda&#39;, &#39;insecta&#39;, &#39;dicondylia&#39;, &#39;pterygota&#39;, &#39;neoptera&#39;, &#39;endopterygota&#39;, &#39;coleoptera&#39;, &#39;polyphaga&#39;, &#39;cucujiformia&#39;, &#39;chrysomeloidea&#39;, &#39;chrysomelidae&#39;, &#39;galerucinae&#39;, &#39;alticini&#39;, &#39;lanka&#39;]</span>
+        <span class="c1">#</span>
+        <span class="c1">#</span>
+        <span class="c1"># Word: carybdea</span>
+        <span class="c1"># Word: cnidaria</span>
+        <span class="c1"># Word: cubozoa</span>
+        <span class="c1"># Word: carybdeidae</span>
+        <span class="c1"># Word: carybdea</span>
+        <span class="c1">#   Lineage:[&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;cnidaria&#39;, &#39;cubozoa&#39;, &#39;carybdeida&#39;, &#39;carybdeidae&#39;, &#39;carybdea&#39;]</span>
+        <span class="c1">#   Lineage:[&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;cnidaria&#39;]</span>
+        <span class="c1">#   Lineage:[&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;cnidaria&#39;, &#39;cubozoa&#39;]</span>
+        <span class="c1">#   Lineage:[&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;cnidaria&#39;, &#39;cubozoa&#39;, &#39;carybdeida&#39;, &#39;carybdeidae&#39;]</span>
+        <span class="c1">#   Lineage:[&#39;root&#39;, &#39;cellular organisms&#39;, &#39;eukaryota&#39;, &#39;opisthokonta&#39;, &#39;metazoa&#39;, &#39;eumetazoa&#39;, &#39;cnidaria&#39;, &#39;cubozoa&#39;, &#39;carybdeida&#39;, &#39;carybdeidae&#39;, &#39;carybdea&#39;]</span>
+        <span class="c1"># --------------</span>
+        <span class="n">ento_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;araneae&quot;</span><span class="p">,</span> <span class="s2">&quot;arachnida&quot;</span><span class="p">,</span> <span class="s2">&quot;hymenoptera&quot;</span><span class="p">,</span> <span class="s2">&quot;insecta&quot;</span><span class="p">,</span> <span class="s2">&quot;scolopendridae&quot;</span><span class="p">,</span> <span class="s2">&quot;myriapoda&quot;</span><span class="p">]</span>
+        <span class="n">izg_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;porifera&#39;</span><span class="p">,</span> <span class="s1">&#39;echinodermata&#39;</span><span class="p">,</span> <span class="s1">&#39;spiralia&#39;</span><span class="p">,</span> <span class="s1">&#39;crustacea&#39;</span><span class="p">]</span>
+        <span class="n">om_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;aves&quot;</span><span class="p">,</span> <span class="s2">&quot;mammalia&quot;</span><span class="p">]</span>
+        <span class="n">i_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;actinopterygii&quot;</span><span class="p">,</span> <span class="s2">&quot;chondrichthyes&quot;</span><span class="p">,</span> <span class="s2">&quot;actinopterygii&quot;</span><span class="p">]</span>
+        <span class="n">herp_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lepidosauria&quot;</span><span class="p">,</span> <span class="s2">&quot;amphibia&quot;</span><span class="p">,</span> <span class="s2">&quot;toxicofera&quot;</span><span class="p">,</span> <span class="s2">&quot;squamata&quot;</span><span class="p">]</span>
+        <span class="n">botany_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;plantae&quot;</span><span class="p">,</span> <span class="s2">&quot;streptophyta&quot;</span><span class="p">]</span>
+        <span class="n">skip_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;California&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;areas&quot;</span><span class="p">,</span> <span class="s2">&quot;sea&quot;</span><span class="p">,</span> <span class="s2">&quot;virginia&quot;</span><span class="p">,</span> <span class="s2">&quot;argentina&quot;</span><span class="p">,</span> <span class="s2">&quot;arizona&quot;</span><span class="p">,</span> <span class="s2">&quot;andes&quot;</span><span class="p">]</span>
+        <span class="n">all_names</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;entomology&#39;</span><span class="p">:</span> <span class="n">ento_names</span><span class="p">,</span>
+                     <span class="s1">&#39;izg&#39;</span><span class="p">:</span> <span class="n">izg_names</span><span class="p">,</span>
+                     <span class="s1">&#39;o&amp;m&#39;</span><span class="p">:</span> <span class="n">om_names</span><span class="p">,</span>
+                     <span class="s2">&quot;ichthyology&quot;</span><span class="p">:</span> <span class="n">i_names</span><span class="p">,</span>
+                     <span class="s2">&quot;herpetology&quot;</span><span class="p">:</span> <span class="n">herp_names</span><span class="p">,</span>
+                     <span class="s2">&quot;botany&quot;</span><span class="p">:</span> <span class="n">botany_names</span><span class="p">};</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">department</span><span class="p">,</span> <span class="n">name_array</span> <span class="ow">in</span> <span class="n">all_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">name_array</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">lineage</span> <span class="ow">in</span> <span class="n">lineages</span><span class="p">:</span>
+                    <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">for</span> <span class="n">skip_name</span> <span class="ow">in</span> <span class="n">skip_names</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">skip_name</span> <span class="ow">in</span> <span class="n">lineage</span><span class="p">:</span>
+                            <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">skip</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">lineage</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">retval</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">department</span> <span class="o">!=</span> <span class="n">retval</span><span class="p">:</span>
+                                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Conflict between </span><span class="si">{</span><span class="n">retval</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">department</span><span class="si">}</span><span class="s2">, returning none&quot;</span><span class="p">)</span>
+                                <span class="k">return</span> <span class="kc">None</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Matching </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">department</span><span class="si">}</span><span class="s2"> via lineage: </span><span class="si">{</span><span class="n">lineage</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">retval</span> <span class="o">=</span> <span class="n">department</span>
+
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+<div class="viewcode-block" id="Validator.analyze_title"><a class="viewcode-back" href="../validator.html#validator.Validator.analyze_title">[docs]</a>    <span class="k">def</span> <span class="nf">analyze_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Analyzes a title to determine the relevant department based on taxonomy keywords.</span>
+
+<span class="sd">        :param title: The title to analyze.</span>
+<span class="sd">        :type title: str</span>
+<span class="sd">        :param verbose: If True, display verbose information during analysis, defaults to False.</span>
+<span class="sd">        :type verbose: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="c1"># Valid taxa: Curcuma</span>
+        <span class="c1"># [&#39;root&#39;, &#39;cellular organisms&#39;, &#39;Eukaryota&#39;, &#39;Viridiplantae&#39;, &#39;Streptophyta&#39;, &#39;Streptophytina&#39;, &#39;Embryophyta&#39;, &#39;Tracheophyta&#39;, &#39;Euphyllophyta&#39;, &#39;Spermatophyta&#39;, &#39;Magnoliopsida&#39;, &#39;Mesangiospermae&#39;, &#39;Liliopsida&#39;, &#39;Petrosaviidae&#39;, &#39;commelinids&#39;, &#39;Zingiberales&#39;, &#39;Zingiberaceae&#39;, &#39;Curcuma&#39;]</span>
+
+        <span class="n">title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_string</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">found_lineages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="n">word</span> <span class="o">=</span> <span class="n">word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">lineage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_lineage</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lineage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">found_lineages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lineage</span><span class="p">)</span>
+        <span class="n">department</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">categorize_lineage</span><span class="p">(</span><span class="n">found_lineages</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">department</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;It&#39;s in </span><span class="si">{</span><span class="n">Fore</span><span class="o">.</span><span class="n">GREEN</span><span class="si">}{</span><span class="n">department</span><span class="si">}{</span><span class="n">Fore</span><span class="o">.</span><span class="n">RESET</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">lineage</span> <span class="ow">in</span> <span class="n">found_lineages</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Lineage:</span><span class="si">{</span><span class="n">lineage</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Validator.prompt"><a class="viewcode-back" href="../validator.html#validator.Validator.prompt">[docs]</a>    <span class="k">def</span> <span class="nf">prompt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prompt the user for actions related to a given match.</span>
+
+<span class="sd">        :param match: The match to prompt for.</span>
+<span class="sd">        :type match: Match</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">exit</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">exit</span><span class="p">:</span>
+            <span class="k">match</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">title</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analyze_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Keep(K) print lines(L) Discard(D) open(O) skip(s) Verbose(V)&quot;</span><span class="p">)</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
+                <span class="k">match</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;k&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prompt_add_type</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;v&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analyze_title</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span>
+                <span class="k">match</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">)</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span>
+                <span class="k">match</span><span class="o">.</span><span class="n">print_matched_lines</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Validator.prompt_digital"><a class="viewcode-back" href="../validator.html#validator.Validator.prompt_digital">[docs]</a>    <span class="k">def</span> <span class="nf">prompt_digital</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="p">):</span>
+        <span class="n">exit</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">exit</span><span class="p">:</span>
+            <span class="n">digital_only</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">match</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">title</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analyze_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;digital only? y/n/(o)pen,(l)ines,(s)kip&quot;</span><span class="p">)</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
+                <span class="k">match</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span>
+                <span class="n">digital_only</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;s&quot;</span><span class="p">:</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;n&quot;</span><span class="p">:</span>
+                <span class="n">digital_only</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span>
+                <span class="k">match</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">)</span>
+                <span class="n">exit</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span>
+                <span class="k">match</span><span class="o">.</span><span class="n">print_matched_lines</span><span class="p">()</span>
+        <span class="k">match</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">collection</span><span class="p">,</span><span class="n">digital_only</span><span class="o">=</span><span class="n">digital_only</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Validator.prompt_add_type"><a class="viewcode-back" href="../validator.html#validator.Validator.prompt_add_type">[docs]</a>    <span class="k">def</span> <span class="nf">prompt_add_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prompt the user to add a collection type to the given match.</span>
+
+<span class="sd">        :param match: The match to add a collection type to.</span>
+<span class="sd">        :type match: Match</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">collection_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="n">collection_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+                <span class="s2">&quot;Herpetology(H) Ichthyology(I) O&amp;M(M) IZ&amp;G(Z) Anthropology(A) Entomology(E) Botany(B) Other(O) Library(l)&quot;</span><span class="p">)</span>
+            <span class="n">option</span> <span class="o">=</span> <span class="n">option</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;h&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;herpetology&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;i&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;ichthyology&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;m&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;o&amp;m&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;iz&amp;g&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;a&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;anthropology&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;e&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;entomology&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;botany&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;o&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;other&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;l&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;library&quot;</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;g&quot;</span><span class="p">:</span>
+                <span class="n">collection_type</span> <span class="o">=</span> <span class="s2">&quot;geology&quot;</span>
+        <span class="k">match</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ignore</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">collection</span><span class="o">=</span><span class="n">collection_type</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

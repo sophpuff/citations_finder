@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doi_database &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">doi_database</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for doi_database</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">requests.exceptions</span>
+
+<span class="kn">from</span> <span class="nn">doi_entry</span> <span class="kn">import</span> <span class="n">DoiEntry</span>
+<span class="kn">from</span> <span class="nn">doi_entry</span> <span class="kn">import</span> <span class="n">DoiFactory</span>
+<span class="kn">from</span> <span class="nn">utils_mixin</span> <span class="kn">import</span> <span class="n">Utils</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">crossref_journal_entry</span> <span class="kn">import</span> <span class="n">CrossrefJournalEntry</span>
+<span class="kn">from</span> <span class="nn">doi_entry</span> <span class="kn">import</span> <span class="n">EntryExistsException</span>
+<span class="kn">from</span> <span class="nn">db_connection</span> <span class="kn">import</span> <span class="n">DBConnection</span>
+<span class="kn">from</span> <span class="nn">database_report</span> <span class="kn">import</span> <span class="n">DatabaseReport</span>
+<span class="kn">from</span> <span class="nn">downloaders</span> <span class="kn">import</span> <span class="n">Downloaders</span>
+<span class="kn">from</span> <span class="nn">scan_database</span> <span class="kn">import</span> <span class="n">ScanDatabase</span>
+<span class="kn">from</span> <span class="nn">validator</span> <span class="kn">import</span> <span class="n">Validator</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<div class="viewcode-block" id="RetriesExceededException"><a class="viewcode-back" href="../doi_database.html#doi_database.RetriesExceededException">[docs]</a><span class="k">class</span> <span class="nc">RetriesExceededException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="DoiDatabase"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase">[docs]</a><span class="k">class</span> <span class="nc">DoiDatabase</span><span class="p">(</span><span class="n">Utils</span><span class="p">):</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s1">&#39;development; mailto:jrussack@calacademy.org&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># &quot;do_setup&quot; creates the db tables (if they don&#39;t exist) and polls crossref.org for</span>
+    <span class="c1"># the journals listed in journals.tsv. If the PDF already exists</span>
+    <span class="c1"># then the full path is updated.</span>
+    <span class="c1">#</span>
+    <span class="c1"># &quot;do_download&quot; scans through all DOI records. If the PDF is already</span>
+    <span class="c1"># downloaded, it populates the record accordingly.</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">start_year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">end_year</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_setup</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">start_year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">end_year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;If scanning must provide both a start and an end year&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_query_journals</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates seven SQL database tables </span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">CrossrefJournalEntry</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span>
+        <span class="n">DoiEntry</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span>
+        <span class="n">ScanDatabase</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span>
+        <span class="n">Validator</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">_query_journals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Queries crossref for the history of the journal in question.</span>
+<span class="sd">        Crossref returns all records starting at the start_year until the </span>
+<span class="sd">        most recent year. Both are defined in config.ini -&gt; [crossref] -&gt;</span>
+<span class="sd">        &#39;scan_for_dois_after_year&#39; AND &#39;scan_for_dois_before_year&#39;</span>
+
+<span class="sd">        Updates the table &quot;journals&quot; with the &quot;start year&quot; and &quot;end_year&quot; </span>
+<span class="sd">        passed in here. Journals table doesn&#39;t get an </span>
+<span class="sd">        entry until an attempt to query DOIs from crossref has happened.</span>
+
+<span class="sd">        :param start_year: Start year of journal</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: End year of journal</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;journals.tsv&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tsvin</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">tsvin</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+                        <span class="k">continue</span>
+                    <span class="n">issn</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">issn</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;not in crossref&quot;</span><span class="p">):</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Not in crossref, continuing.&quot;</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="n">journal</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="nb">type</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="nb">type</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing error: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">, skipping.&quot;</span><span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading </span><span class="si">{</span><span class="n">journal</span><span class="si">}</span><span class="s2"> issn: </span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="s2"> starting year: </span><span class="si">{</span><span class="n">start_year</span><span class="si">}</span><span class="s2"> ending year </span><span class="si">{</span><span class="n">end_year</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Type: </span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_journal_record</span><span class="p">(</span><span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">download_issn</span><span class="p">(</span><span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_update_journal_record</span><span class="p">(</span><span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">journal</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DoiDatabase.force_crossref_update"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.force_crossref_update">[docs]</a>    <span class="k">def</span> <span class="nf">force_crossref_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Retrieves journals from the database and performs a forced update</span>
+<span class="sd">        for the specified `start_year` defined in config.ini &#39;force_update_year = xxxx&#39; </span>
+<span class="sd">        by downloading data from Crossref  </span>
+<span class="sd">        </span>
+
+<span class="sd">        :param start_year: The start year for the update, defined in config.ini as &#39;force_update_year = xxxx&#39;</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">end_year</span> <span class="o">=</span> <span class="n">start_year</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select issn,name,type from journals&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">journal</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">issn</span> <span class="o">=</span> <span class="n">journal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">journal</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">journal</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">download_issn</span><span class="p">(</span><span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_journal_record</span><span class="p">(</span><span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_issn_oldest_year</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issn</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;In &#39;journals&#39; table in database, each issn # / journal name </span>
+<span class="sd">        has a start_year and end_year assigned. This method </span>
+<span class="sd">        retrieves the start_year value by SQL query</span>
+
+<span class="sd">        :param issn: issn number</span>
+<span class="sd">        :type issn: str</span>
+<span class="sd">        :return: The start_year of issn # / journal name </span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select start_year from journals where issn=</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_check_journal_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if the journal needs to be downloaded</span>
+
+<span class="sd">        :param issn: ISSN number</span>
+<span class="sd">        :type issn: str</span>
+<span class="sd">        :param start_year: The start year of the journal</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :return: True if journal needs to be downloaded (when old_year_downloaded</span>
+<span class="sd">        on record is more recent than passed start_year)</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">oldest_year_downloaded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_issn_oldest_year</span><span class="p">(</span><span class="n">issn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">oldest_year_downloaded</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">oldest_year_downloaded</span> <span class="o">&gt;</span> <span class="n">start_year</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_update_journal_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update or insert a line in the database -&gt; &#39;journals&#39; table, </span>
+<span class="sd">        with new start_year, if previous_start_year is None or is more recent(greater) </span>
+<span class="sd">        than new start_year</span>
+
+<span class="sd">        :param issn: ISSN number</span>
+<span class="sd">        :type issn: str</span>
+<span class="sd">        :param start_year: The start year of the journal</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param name: The name of the journal</span>
+<span class="sd">        :type name: str</span>
+<span class="sd">        :param type: the type of the journal, either &#39;online&#39; or &#39;print&#39;</span>
+<span class="sd">        :type type: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">previous_start_year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_issn_oldest_year</span><span class="p">(</span><span class="n">issn</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">previous_start_year</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">previous_start_year</span> <span class="o">&gt;</span> <span class="n">start_year</span><span class="p">:</span>
+            <span class="c1"># Below line &quot;escapes the quotes&quot;. In SQL, single quotes are used to </span>
+            <span class="c1"># enclose string values in SQL queries. &quot;Escaping quotes&quot; allowing </span>
+            <span class="c1"># the string to be included in the SQL query without causing issues.</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;INSERT OR REPLACE INTO journals (issn,name, type,start_year,end_year) VALUES (&#39;</span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="s2">&#39;,&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;,&#39;</span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&#39;,</span><span class="si">{</span><span class="n">start_year</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+            <span class="n">results</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+
+    <span class="c1"># not referenced anywhere at present; invoke from main per README</span>
+
+    <span class="c1"># Scans through existing PDFs in the directory</span>
+    <span class="c1"># If they&#39;re present, create or update the DoiEntry</span>
+    <span class="c1"># in the database.</span>
+
+    <span class="c1"># Inefficent; single request to crossref.org to get metadata for one pub.</span>
+    <span class="c1"># it&#39;s better to run download_issn for the journal of interest and the run</span>
+    <span class="c1"># import_pdfs. If the pdfs are of unknown or mixed provenance, then this</span>
+    <span class="c1"># is the way to go.</span>
+
+<div class="viewcode-block" id="DoiDatabase.import_pdfs"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.import_pdfs">[docs]</a>    <span class="k">def</span> <span class="nf">import_pdfs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="n">raise_exception_if_exist</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Import PDFs and build database entries based on their metadata.</span>
+
+<span class="sd">        :param directory: The directory path where the PDF files are located, defaults to &quot;./&quot;</span>
+<span class="sd">        :type directory: str, optional</span>
+
+<span class="sd">        :param raise_exception_if_exist: Flag indicating whether to raise an exception if the DOI already exists in the database, defaults to True</span>
+<span class="sd">        :type raise_exception_if_exist: bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">pdf_files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s2">&quot;*.pdf&quot;</span><span class="p">))</span>
+        <span class="n">total_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">pdf_file</span> <span class="ow">in</span> <span class="n">pdf_files</span><span class="p">:</span>
+            <span class="n">doi_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_doi_from_path</span><span class="p">(</span><span class="n">pdf_file</span><span class="p">)</span>
+            <span class="n">base_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://api.crossref.org/works/</span><span class="si">{</span><span class="n">doi_string</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Querying crossref.org for metadata to build db: </span><span class="si">{</span><span class="n">base_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url_</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">raise_exception_if_exist</span><span class="p">:</span>
+                <span class="n">DoiEntry</span><span class="p">(</span><span class="s1">&#39;import_pdfs&#39;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">DoiEntry</span><span class="p">(</span><span class="s1">&#39;import_pdfs&#39;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">EntryExistsException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DOI already in database, skipping: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">total_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">total_count</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done </span><span class="si">{</span><span class="n">total_count</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pdf_files</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DoiDatabase.download_dois_by_journal_size"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.download_dois_by_journal_size">[docs]</a>    <span class="k">def</span> <span class="nf">download_dois_by_journal_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                    <span class="n">start_year</span><span class="p">,</span>
+                                    <span class="n">end_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Selects journals with a specified time range and retrieves a list of journals</span>
+<span class="sd">        along with their ISSN and the number of DOIs associated with each journal. It then proceeds </span>
+<span class="sd">        to attempt downloads for each journal based on their size, i.e., the number of DOIs they have,</span>
+<span class="sd">        from journal with least DOIs to most DOIs</span>
+
+<span class="sd">        :param start_year: The start year for the time range to consider.</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: The end year for the time range to consider.</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&#39;&#39;SELECT journal_title,issn,count(doi)</span>
+<span class="s1">                FROM dois</span>
+<span class="s1">                where </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sql_year_restriction</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span><span class="w"> </span><span class="n">end_year</span><span class="p">)</span><span class="si">}</span>
+<span class="s1">                and downloaded = False </span>
+<span class="s1">                GROUP BY journal_title</span>
+<span class="s1">                ORDER BY COUNT(doi) ASC&#39;&#39;&#39;</span>
+
+        <span class="n">journals</span> <span class="o">=</span> <span class="n">DBConnection</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">journal</span><span class="p">,</span> <span class="n">issn</span><span class="p">,</span> <span class="n">doi_count</span> <span class="ow">in</span> <span class="n">journals</span><span class="p">:</span>
+            <span class="c1"># journal = journal[0]</span>
+            <span class="c1"># issn = journal[1]</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting downloads for journal: </span><span class="si">{</span><span class="n">journal</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">report</span> <span class="o">=</span> <span class="n">DatabaseReport</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">journal</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">journal</span><span class="o">=</span><span class="n">journal</span><span class="p">,</span> <span class="n">issn</span><span class="o">=</span><span class="n">issn</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">download_dois</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">journal</span><span class="o">=</span><span class="n">journal</span><span class="p">,</span> <span class="n">issn</span><span class="o">=</span><span class="n">issn</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_generate_select_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">journal_issn</span><span class="p">,</span> <span class="n">downloaded</span><span class="o">=</span><span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate an SQL query to select DOI entries from the database -&gt; dois table</span>
+
+<span class="sd">        :param start_year: The starting year of the date range for DOI entries selection.</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: The ending year of the date range for DOI entries selection.</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        :param journal_issn: The ISSN (International Standard Serial Number) of the journal</span>
+<span class="sd">        for DOI entries filtering.</span>
+<span class="sd">        :type journal_issn: str</span>
+<span class="sd">        :param downloaded: The downloaded status to be used in the selection criteria,</span>
+<span class="sd">        defaults to &quot;FALSE&quot;.</span>
+<span class="sd">        :type downloaded: str, optional</span>
+<span class="sd">        :return: The SQL query for selecting DOI entries based on the provided criteria.</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">select_dois</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select * from dois where downloaded=</span><span class="si">{</span><span class="n">downloaded</span><span class="si">}</span><span class="s2"> &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">start_year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end_year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">select_dois</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot; and  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sql_year_restriction</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span><span class="w"> </span><span class="n">end_year</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">journal_issn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">select_dois</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39; and issn=&quot;</span><span class="si">{</span><span class="n">journal_issn</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+        <span class="k">return</span> <span class="n">select_dois</span>
+
+<div class="viewcode-block" id="DoiDatabase.get_dois"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.get_dois">[docs]</a>    <span class="k">def</span> <span class="nf">get_dois</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">journal_issn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get DOI entries from the database where downloaded column is marked as True</span>
+<span class="sd">          within the specified date range</span>
+
+
+<span class="sd">        :param start_year: The starting year of the date range.</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: The ending year of the date range.</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        :param journal_issn: The ISSN (International Standard Serial Number) of the journal to filter the results, defaults to None.</span>
+<span class="sd">        :type journal_issn: str, optional</span>
+<span class="sd">        :return: A list of DOI entries that match the specified criteria.</span>
+<span class="sd">        :rtype: List[DoiEntry]</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">sql</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_select_sql</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">journal_issn</span><span class="p">,</span> <span class="s2">&quot;TRUE&quot;</span><span class="p">)</span>
+        <span class="n">dois</span> <span class="o">=</span> <span class="n">DoiFactory</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span><span class="o">.</span><span class="n">dois</span>
+        <span class="k">return</span> <span class="n">dois</span></div>
+
+<div class="viewcode-block" id="DoiDatabase.get_doi"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.get_doi">[docs]</a>    <span class="k">def</span> <span class="nf">get_doi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi</span><span class="p">):</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;select * from dois where doi = &#39;</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">doi</span> <span class="o">=</span> <span class="n">DoiFactory</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span><span class="o">.</span><span class="n">dois</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No such doi: </span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2"> or multiple results&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">doi</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DoiDatabase.ensure_downloaded_has_pdf"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.ensure_downloaded_has_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_downloaded_has_pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if an DOI&#39;s associated PDF file exists, then updates the database</span>
+
+<span class="sd">        :param start_year: The starting year of the date range.</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: The ending year of the date range.</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">dois</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dois</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">doi_entry</span> <span class="ow">in</span> <span class="n">dois</span><span class="p">:</span>
+            <span class="n">doi_entry_instance</span> <span class="o">=</span> <span class="n">DoiEntry</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">)</span>
+            <span class="n">doi_entry_instance</span><span class="o">.</span><span class="n">check_file</span><span class="p">()</span>
+            <span class="n">doi_entry_instance</span><span class="o">.</span><span class="n">update_database</span><span class="p">()</span></div>
+
+    <span class="c1"># Ensures that all DOIs in the database have associated files</span>
+    <span class="c1"># Download, if not.</span>
+
+<div class="viewcode-block" id="DoiDatabase.download_dois"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.download_dois">[docs]</a>    <span class="k">def</span> <span class="nf">download_dois</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                    <span class="n">start_year</span><span class="p">,</span>
+                    <span class="n">end_year</span><span class="p">,</span>
+                    <span class="n">journal</span><span class="p">,</span>
+                    <span class="n">issn</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Download DOI entries based on specified criteria.</span>
+
+<span class="sd">        </span>
+<span class="sd">        It first generates an SQL query to select the DOI entries from the database based on</span>
+<span class="sd">        the given start year, end year, and ISSN (International Standard Serial Number).</span>
+<span class="sd">        It then creates an instance of the Downloaders class to handle the downloading process.</span>
+
+<span class="sd">        :param start_year: The starting year of the date range for selecting DOI entries.</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param end_year: The ending year of the date range for selecting DOI entries.</span>
+<span class="sd">        :type end_year: int</span>
+<span class="sd">        :param journal: The journal name used as a filter for DOI entries, or None for all journals.</span>
+<span class="sd">        :type journal: str or None</span>
+<span class="sd">        :param issn: The ISSN (International Standard Serial Number) used as a filter for DOI entries. If True, the ISSN will be used to filter DOI entries; if False, it will not be used for filtering.</span>
+<span class="sd">        :type issn: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">select_dois</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_select_sql</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">issn</span><span class="p">)</span>
+        <span class="n">downloaders</span> <span class="o">=</span> <span class="n">Downloaders</span><span class="p">()</span>
+
+        <span class="n">doif</span> <span class="o">=</span> <span class="n">DoiFactory</span><span class="p">(</span><span class="n">select_dois</span><span class="p">)</span>
+        <span class="n">dois</span> <span class="o">=</span> <span class="n">doif</span><span class="o">.</span><span class="n">dois</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SQL: </span><span class="si">{</span><span class="n">select_dois</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pending download count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dois</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">download_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">doi_entry</span> <span class="ow">in</span> <span class="n">dois</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">journal</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">doi_entry</span><span class="o">.</span><span class="n">issn</span> <span class="o">==</span> <span class="n">issn</span><span class="p">:</span>
+                <span class="n">download_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">)</span>
+
+        <span class="n">downloaders</span><span class="o">.</span><span class="n">download_list</span><span class="p">(</span><span class="n">download_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DoiDatabase.is_downloaded"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.is_downloaded">[docs]</a>    <span class="k">def</span> <span class="nf">is_downloaded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doi_entry</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">doi_entry</span><span class="o">.</span><span class="n">downloaded</span></div>
+
+<div class="viewcode-block" id="DoiDatabase.download_issn"><a class="viewcode-back" href="../doi_database.html#doi_database.DoiDatabase.download_issn">[docs]</a>    <span class="k">def</span> <span class="nf">download_issn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">issn</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;    Download data for a specific ISSN from a given start year to an end year</span>
+<span class="sd">        using crossref API. The downloaded data is not explicitly stored or saved to a </span>
+<span class="sd">        specific location.</span>
+
+
+<span class="sd">        :param issn: The ISSN of the journal</span>
+<span class="sd">        :type issn: str</span>
+<span class="sd">        :param start_year: The start year for filtering the data</span>
+<span class="sd">        :type start_year: str</span>
+<span class="sd">        :param end_year: The end year for filtering the data</span>
+<span class="sd">        :type end_year: str</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">base_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://api.crossref.org/journals/</span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="s2">/works?filter=from-pub-date:</span><span class="si">{</span><span class="n">start_year</span><span class="si">}</span><span class="s2">,until-pub-date:</span><span class="si">{</span><span class="n">end_year</span><span class="si">}</span><span class="s2">&amp;rows=1000&amp;cursor=&quot;</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="s2">&quot;*&quot;</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">total_items_processed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">total_results</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing issn:</span><span class="si">{</span><span class="n">issn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">done</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="p">,</span> <span class="n">total_results</span><span class="p">,</span> <span class="n">items_processed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_chunk</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">start_year</span><span class="p">)</span>
+                <span class="n">total_items_processed</span> <span class="o">+=</span> <span class="n">items_processed</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Continuing...&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ConnectionError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">total_items_processed</span> <span class="o">&gt;=</span> <span class="n">total_results</span><span class="p">:</span>
+                    <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Done.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;retrying....&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">RetriesExceededException</span> <span class="k">as</span> <span class="n">rex</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retries exceeded: </span><span class="si">{</span><span class="n">rex</span><span class="si">}</span><span class="s2">, aborting.&quot;</span><span class="p">)</span>
+                <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="nf">_handle_connection_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">retries</span><span class="p">,</span> <span class="n">max_retries</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;    Handles connection errors during downloading.</span>
+
+<span class="sd">        :param retries: The number of retries attempted.</span>
+<span class="sd">        :type retries: int</span>
+<span class="sd">        :param max_retries: The maximum number of retries allowed.</span>
+<span class="sd">        :type max_retries: int</span>
+<span class="sd">        :param url: The URL of the resource being downloaded.</span>
+<span class="sd">        :type url: str</span>
+<span class="sd">        :param cursor: The cursor or pointer indicating the current position in the resource.</span>
+<span class="sd">        :type cursor: int</span>
+<span class="sd">        :param start_year: The start year of the resource.</span>
+<span class="sd">        :type start_year: int</span>
+<span class="sd">        :param e: The connection error that occurred.</span>
+<span class="sd">        :type e: Exception</span>
+<span class="sd">        :raises RetriesExceededException: If the maximum number of retries is exceeded.</span>
+<span class="sd">        :return: The result of the _download_chunk function call.</span>
+<span class="sd">        :rtype: Result of _download_chunk function call.</span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connection error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">, retries: </span><span class="si">{</span><span class="n">retries</span><span class="si">}</span><span class="s2">. Sleeping 60 and retrying.&quot;</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">retries</span> <span class="o">&gt;=</span> <span class="n">max_retries</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RetriesExceededException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retried </span><span class="si">{</span><span class="n">retries</span><span class="si">}</span><span class="s2"> times, aborting.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_download_chunk</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">retries</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_download_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;First, download data using url and store in &#39;results&#39;. From results, get &#39;message&#39;, </span>
+<span class="sd">        &#39;items&#39;, and &#39;total-results&#39;.</span>
+<span class="sd">        Second, loop through all items. If item type is &#39;journal&#39;, run CrossrefJournalEntry. </span>
+<span class="sd">        Else if item type is &#39;journal-article&quot;, run DoiEntry. If item type is anything else, pass for now.</span>
+<span class="sd">        Third, check number of items. If no items, raise ConnectionError exception. If there are items, </span>
+<span class="sd">        logs a message indicating the number of items processed.</span>
+<span class="sd">        Lastly, return the tuple consisted of &#39;message[&#39;next-cursor&#39;], total_results, items_processed&#39;</span>
+
+<span class="sd">        :param url: The URL (crossref api) to download the data from</span>
+<span class="sd">        :type url: str</span>
+<span class="sd">        :param cursor: The cursor for pagination</span>
+<span class="sd">        :type cursor: str</span>
+<span class="sd">        :param start_year: The start year for filtering the data</span>
+<span class="sd">        :type start_year: str</span>
+<span class="sd">        :param retries:  The number of retries attempted, defaults to 0</span>
+<span class="sd">        :type retries: int, optional</span>
+<span class="sd">        :raises ConnectionError: Raises a ConnectionError if a connection error occurs</span>
+<span class="sd">        :return: The &#39;next cursor&#39; value, message[&#39;total-results&#39;], and number of items processed.</span>
+<span class="sd">        :rtype: Tuple[str, dict(not sure about this), int]</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>        
+        <span class="n">max_retries</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">safe_cursor</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">safe</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url_</span><span class="p">(</span><span class="n">url</span> <span class="o">+</span> <span class="n">safe_cursor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">retries</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_connection_error</span><span class="p">(</span><span class="n">retries</span><span class="p">,</span> <span class="n">max_retries</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">retries</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_connection_error</span><span class="p">(</span><span class="n">retries</span><span class="p">,</span> <span class="n">max_retries</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">cursor</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Querying: </span><span class="si">{</span><span class="n">url</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">safe_cursor</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
+        <span class="n">total_results</span> <span class="o">=</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;total-results&#39;</span><span class="p">]</span>
+        <span class="n">items_processed</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            <span class="n">items_processed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># logging.info(f&quot;Processing DOI: {item[&#39;DOI&#39;]}&quot;)</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;journal&#39;</span><span class="p">:</span>
+                <span class="n">CrossrefJournalEntry</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;journal-article&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">DoiEntry</span><span class="p">(</span><span class="s1">&#39;download_chunk&#39;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">EntryExistsException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="c1"># logging.warning(f&quot;DOI already in database, skipping: {e}&quot;)</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># &quot;journal-issue&quot;</span>
+                <span class="c1"># logging.info(f&quot;got type: {type}&quot;)</span>
+                <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No items left.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span><span class="si">}</span><span class="s2"> items&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">message</span><span class="p">[</span><span class="s1">&#39;next-cursor&#39;</span><span class="p">],</span> <span class="n">total_results</span><span class="p">,</span> <span class="n">items_processed</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

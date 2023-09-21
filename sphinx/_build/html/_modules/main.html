@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>main &mdash; citations finder  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citations finder
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citations finder</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for main</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">doi_entry</span> <span class="kn">import</span> <span class="n">DoiFactory</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">doi_database</span> <span class="kn">import</span> <span class="n">DoiDatabase</span>
+<span class="kn">from</span> <span class="nn">database_report</span> <span class="kn">import</span> <span class="n">DatabaseReport</span>
+<span class="kn">from</span> <span class="nn">scan_database</span> <span class="kn">import</span> <span class="n">ScanDatabase</span>
+<span class="kn">from</span> <span class="nn">known_good_papers</span> <span class="kn">import</span> <span class="n">KnownGoodPapers</span>
+<span class="kn">from</span> <span class="nn">scan</span> <span class="kn">import</span> <span class="n">Scan</span>
+<span class="kn">from</span> <span class="nn">validator</span> <span class="kn">import</span> <span class="n">Validator</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="kn">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">downloaders</span> <span class="kn">import</span> <span class="n">Downloaders</span>
+<span class="kn">from</span> <span class="nn">copyout</span> <span class="kn">import</span> <span class="n">CopyOut</span>
+<span class="kn">from</span> <span class="nn">crossref_journal_entry</span> <span class="kn">import</span> <span class="n">CrossrefJournalEntry</span>
+<span class="kn">import</span> <span class="nn">journal_finder</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<div class="viewcode-block" id="download_single_doi"><a class="viewcode-back" href="../main.html#main.download_single_doi">[docs]</a><span class="k">def</span> <span class="nf">download_single_doi</span><span class="p">(</span><span class="n">doi</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This function handles the retrieval of DOI information, </span>
+<span class="sd">    checks if the DOI exists in the database, dois table, </span>
+<span class="sd">    and initiates the download of the associated document using </span>
+<span class="sd">    class Downloaders in downloaders.py</span>
+
+<span class="sd">    :param doi: The DOI  of the document to be downloaded.</span>
+<span class="sd">    :type doi: str</span>
+<span class="sd">    :param config: The configuration settings for the download.</span>
+<span class="sd">    :type config: dict</span>
+<span class="sd">    :return: None</span>
+
+<span class="sd">    Limitations here: if doi specified is shown </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Single DOI download mode&quot;</span><span class="p">)</span>
+    <span class="n">select_doi</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select * from dois where doi=&#39;</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">&#39;&quot;&quot;&quot;</span>
+    <span class="n">doif</span> <span class="o">=</span> <span class="n">DoiFactory</span><span class="p">(</span><span class="n">select_doi</span><span class="p">)</span>
+    <span class="n">doi_list</span> <span class="o">=</span> <span class="n">doif</span><span class="o">.</span><span class="n">dois</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">doi_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Single download failed - DOI not in system: </span><span class="si">{</span><span class="n">select_doi</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;DOI not found in the system&quot;</span><span class="p">)</span> 
+        <span class="c1"># above line used to be &quot;sys.exit(1)&quot;, but it prevents sphinx autodoc from working</span>
+
+    <span class="n">downloaders</span> <span class="o">=</span> <span class="n">Downloaders</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">doi_entry</span> <span class="ow">in</span> <span class="n">doi_list</span><span class="p">:</span>
+        <span class="n">downloaders</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="retry_failed_unpaywall_links"><a class="viewcode-back" href="../main.html#main.retry_failed_unpaywall_links">[docs]</a><span class="k">def</span> <span class="nf">retry_failed_unpaywall_links</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retry failed unpaywall downloads for DOIs. </span>
+<span class="sd">    </span>
+<span class="sd">    This function retrieves the list of DOIs that failed to download from the unpaywall service. </span>
+<span class="sd">    Failed DOIs are characterized as a) downloaded column = False in dois table, and </span>
+<span class="sd">    b) open_url column in unpaywall_downloader table has a url address. Then funtion </span>
+<span class="sd">    attempts to retry the download for each DOI. If a download is successful, the DOI is marked</span>
+<span class="sd">    as a successful download.</span>
+
+<span class="sd">    :param config: user configuration settings in config.ini, [general]</span>
+<span class="sd">    :type config: dict</span>
+
+<span class="sd">    :return: None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Retrying failed unpaywall downloads&quot;</span><span class="p">)</span>
+    <span class="n">select_dois</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;select * from dois, unpaywall_downloader where downloaded=False </span>
+<span class="s2">     and dois.doi = unpaywall_downloader.doi and unpaywall_downloader.open_url is not null&quot;&quot;&quot;</span>
+
+    <span class="n">doif</span> <span class="o">=</span> <span class="n">DoiFactory</span><span class="p">(</span><span class="n">select_dois</span><span class="p">)</span>
+    <span class="n">doi_list</span> <span class="o">=</span> <span class="n">doif</span><span class="o">.</span><span class="n">dois</span>
+    <span class="n">downloaders</span> <span class="o">=</span> <span class="n">Downloaders</span><span class="p">()</span>
+    
+
+    <span class="k">for</span> <span class="n">doi_entry</span> <span class="ow">in</span> <span class="n">doi_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">downloaders</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">doi_entry</span><span class="p">):</span>
+            <span class="n">doi_entry</span><span class="o">.</span><span class="n">mark_successful_download</span><span class="p">()</span></div>
+
+
+<span class="c1">#  More may need to be added here; this is for efficency;</span>
+<span class="c1"># most elements create on class instatntiation, but we potentially</span>
+<span class="c1"># hit create here so many times that it belongs in a run-once place.</span>
+<div class="viewcode-block" id="setup_tables"><a class="viewcode-back" href="../main.html#main.setup_tables">[docs]</a><span class="k">def</span> <span class="nf">setup_tables</span><span class="p">():</span>
+    <span class="n">CrossrefJournalEntry</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span>
+    <span class="n">downloaders</span> <span class="o">=</span> <span class="n">Downloaders</span><span class="p">()</span>
+    <span class="n">downloaders</span><span class="o">.</span><span class="n">create_tables</span><span class="p">()</span></div>
+
+
+<span class="c1"># TODO: some missing pdfs are marked as downloaded, we need a cross check step to mark</span>
+<span class="c1"># missing as missing.</span>
+<div class="viewcode-block" id="setup"><a class="viewcode-back" href="../main.html#main.setup">[docs]</a><span class="k">def</span> <span class="nf">setup</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This is the main function being ran.</span>
+<span class="sd">    </span>
+<span class="sd">    Reads the configuration settings and executes </span>
+<span class="sd">    different blocks of code based on the configuration option.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+    <span class="n">setup_tables</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;journal population&#39;</span><span class="p">,</span> <span class="s1">&#39;populate_journals&#39;</span><span class="p">):</span> 
+        <span class="n">gbif_url_list</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_list</span><span class="p">(</span><span class="s1">&#39;journal population&#39;</span><span class="p">,</span> <span class="s1">&#39;gbif_api_collection_links&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">gbif_url_list</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing journals for population from link: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">journal_finder</span><span class="o">.</span><span class="n">addJournals</span><span class="p">(</span><span class="s1">&#39;journals.tsv&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;download_single_doi_mode&#39;</span><span class="p">):</span>
+        <span class="n">download_single_doi</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;download_single_doi&#39;</span><span class="p">),</span> <span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># above line used to be &quot;sys.exit(0)&quot;, but it prevents sphinx autodoc from working</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_failed_unpaywall_links&#39;</span><span class="p">):</span>
+        <span class="n">retry_failed_unpaywall_links</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># above line used to be &quot;sys.exit(0)&quot;, but it prevents sphinx autodoc from working</span>
+    
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;do_pdf_ingest&#39;</span><span class="p">):</span>        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PDF INGEST&quot;</span><span class="p">)</span>
+        <span class="n">pdf_dir</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;pdf_ingest_directory&#39;</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">DoiDatabase</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">import_pdfs</span><span class="p">(</span><span class="n">pdf_dir</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># below line prints/logs lines such as </span>
+    <span class="c1"># &quot;Downloading Arthropod-Plant Interactions issn: 1872-8855 starting year: 2016 </span>
+    <span class="c1"># ending year 2016 Type: print&quot; regardless of config.ini settings</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">DoiDatabase</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;crossref&#39;</span><span class="p">,</span> <span class="s1">&#39;scan_for_dois_after_year&#39;</span><span class="p">),</span>
+                     <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;crossref&#39;</span><span class="p">,</span> <span class="s1">&#39;scan_for_dois_before_year&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;crossref&#39;</span><span class="p">,</span> <span class="s1">&#39;force_update&#39;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CROSSREF FORCE INGEST&quot;</span><span class="p">)</span>
+
+        <span class="n">db</span><span class="o">.</span><span class="n">force_crossref_update</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;crossref&#39;</span><span class="p">,</span> <span class="s1">&#39;force_update_year&#39;</span><span class="p">))</span>
+
+        
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;report_on_start&#39;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GENERATE DATABASE REPORT BEFORE START&quot;</span><span class="p">)</span>
+
+        <span class="n">report_start_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;report_start_year&#39;</span><span class="p">)</span>
+        <span class="n">report_end_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;report_end_year&#39;</span><span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">DatabaseReport</span><span class="p">(</span><span class="n">report_start_year</span><span class="p">,</span> <span class="n">report_end_year</span><span class="p">,</span> <span class="n">journal</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">report</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;exit_after_report&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># above line used to be &quot;sys.exit(0)&quot;, but it prevents sphinx autodoc from working</span>
+
+
+    <span class="n">download_start_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;download_start_year&#39;</span><span class="p">)</span>
+    <span class="n">download_end_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;download_end_year&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;ensure_downloaded_has_pdf&#39;</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;ENSURE THAT DOWNLOADED DOI ENTRIES HAVE ASSOCIATED PDF FILES&quot;</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">ensure_downloaded_has_pdf</span><span class="p">(</span><span class="n">download_start_year</span><span class="p">,</span> <span class="n">download_end_year</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;download_single_journal&#39;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DOWNLOAD SINGLE JOURNAL TEST MODE&quot;</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">download_dois</span><span class="p">(</span><span class="n">download_start_year</span><span class="p">,</span> <span class="n">download_end_year</span><span class="p">,</span>
+                       <span class="n">journal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">issn</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;download_single_journal_issn&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;download&#39;</span><span class="p">,</span> <span class="s1">&#39;enable_paper_download&#39;</span><span class="p">):</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;DOWNLOADING PAPERS&quot;</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">download_dois_by_journal_size</span><span class="p">(</span><span class="n">download_start_year</span><span class="p">,</span> <span class="n">download_end_year</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">):</span>
+        <span class="n">scan_start_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span> <span class="s1">&#39;scan_start_year&#39;</span><span class="p">)</span>
+        <span class="n">scan_end_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span> <span class="s1">&#39;scan_end_year&#39;</span><span class="p">)</span>
+        <span class="n">rescore</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span> <span class="s1">&#39;rescore&#39;</span><span class="p">)</span>
+        <span class="n">reset_scan_database</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span> <span class="s1">&#39;reset_scan_database&#39;</span><span class="p">)</span>
+        <span class="n">scan_db</span> <span class="o">=</span> <span class="n">ScanDatabase</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">reset_scan_database</span><span class="o">=</span><span class="n">reset_scan_database</span><span class="p">)</span>
+        <span class="n">scan_db</span><span class="o">.</span><span class="n">scan_pdfs</span><span class="p">(</span><span class="n">scan_start_year</span><span class="p">,</span> <span class="n">scan_end_year</span><span class="p">,</span> <span class="n">rescore</span><span class="o">=</span><span class="n">rescore</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;scan_for_specimen_ids&#39;</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">):</span>
+            <span class="n">reset_scan_database</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">,</span> <span class="s1">&#39;reset_scan_database&#39;</span><span class="p">)</span>
+
+            <span class="n">scan_db</span><span class="o">.</span><span class="n">scan_for_specimen_ids</span><span class="p">(</span><span class="n">reset_tables</span><span class="o">=</span><span class="n">reset_scan_database</span><span class="p">)</span>
+
+    <span class="n">validate_enabled</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;validate&#39;</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">validate_enabled</span><span class="p">:</span>
+
+        <span class="n">validate_start_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;validate&#39;</span><span class="p">,</span> <span class="s1">&#39;validate_start_year&#39;</span><span class="p">)</span>
+        <span class="n">validate_end_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;validate&#39;</span><span class="p">,</span> <span class="s1">&#39;validate_end_year&#39;</span><span class="p">)</span>
+        <span class="n">validator</span> <span class="o">=</span> <span class="n">Validator</span><span class="p">()</span>
+        <span class="n">regular_prompts</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;validate&#39;</span><span class="p">,</span> <span class="s1">&#39;regular_prompts&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">regular_prompts</span><span class="p">:</span>
+            <span class="n">validator</span><span class="o">.</span><span class="n">audit</span><span class="p">(</span><span class="n">validate_start_year</span><span class="p">,</span> <span class="n">validate_end_year</span><span class="p">)</span>
+        <span class="n">digital_prompts</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;validate&#39;</span><span class="p">,</span> <span class="s1">&#39;digital_prompts&#39;</span><span class="p">)</span>
+        <span class="c1"># doesn&#39;t work until the regular validation sequence is completed.</span>
+        <span class="k">if</span> <span class="n">digital_prompts</span><span class="p">:</span>
+            <span class="n">validator</span><span class="o">.</span><span class="n">audit_digital_only</span><span class="p">(</span><span class="n">validate_start_year</span><span class="p">,</span> <span class="n">validate_end_year</span><span class="p">)</span>
+
+    <span class="n">copyout_enabled</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;copyout&#39;</span><span class="p">,</span> <span class="s1">&#39;enabled&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">copyout_enabled</span><span class="p">:</span>
+        <span class="n">copyout_start_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;copyout&#39;</span><span class="p">,</span> <span class="s1">&#39;copyout_start_year&#39;</span><span class="p">)</span>
+        <span class="n">copyout_end_year</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_int</span><span class="p">(</span><span class="s1">&#39;copyout&#39;</span><span class="p">,</span> <span class="s1">&#39;copyout_end_year&#39;</span><span class="p">)</span>
+        <span class="n">target_dir</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s1">&#39;copyout&#39;</span><span class="p">,</span> <span class="s1">&#39;target_dir&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">cur_year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">copyout_start_year</span><span class="p">,</span> <span class="n">copyout_end_year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exporting year </span><span class="si">{</span><span class="n">cur_year</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">copyout</span> <span class="o">=</span> <span class="n">CopyOut</span><span class="p">(</span><span class="n">cur_year</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;copyout&#39;</span><span class="p">,</span> <span class="s1">&#39;copyout_pdfs&#39;</span><span class="p">):</span>
+                <span class="n">copyout</span><span class="o">.</span><span class="n">copy_out_files</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get_boolean</span><span class="p">(</span><span class="s1">&#39;copyout&#39;</span><span class="p">,</span> <span class="s1">&#39;export_tsv&#39;</span><span class="p">):</span>
+                <span class="n">copyout</span><span class="o">.</span><span class="n">dump_file_tsv</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span>
+                <span class="n">copyout</span><span class="o">.</span><span class="n">dump_custom</span><span class="p">(</span><span class="s2">&quot;antcat&quot;</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">)</span>
+                <span class="n">copyout</span><span class="o">.</span><span class="n">dump_custom</span><span class="p">(</span><span class="s2">&quot;antweb&quot;</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">)</span>
+                <span class="n">copyout</span><span class="o">.</span><span class="n">dump_custom</span><span class="p">(</span><span class="s2">&quot;inaturalist&quot;</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">)</span>
+                <span class="n">copyout</span><span class="o">.</span><span class="n">dump_custom</span><span class="p">(</span><span class="s2">&quot;catalog of fishes&quot;</span><span class="p">,</span> <span class="n">target_dir</span><span class="p">)</span>
+
+    <span class="c1"># validator.copy_matches(&quot;2016_found&quot;)</span>
+
+    <span class="c1"># dynamic = scan_db.scan_single_doi(&#39;10.11646/zootaxa.4205.2.2&#39;)</span>
+    <span class="c1"># logging.info(f&quot;Score: {dynamic}&quot;)</span>
+    <span class="c1"># sys.exit(1)</span>
+    <span class="c1">#</span>
+    <span class="c1"># test_known_good(db)</span>
+
+        <span class="k">return</span></div>
+    <span class="c1"># above line used to be &quot;sys.exit(1)&quot;, but it prevents sphinx autodoc from working</span>
+
+
+
+<span class="c1">#  testing code - we generate a set of known good papers and test our algorithms against it.</span>
+<span class="c1"># Hasn&#39;t been validated since the re-org, not currently run.</span>
+<div class="viewcode-block" id="test_known_good"><a class="viewcode-back" href="../main.html#main.test_known_good">[docs]</a><span class="k">def</span> <span class="nf">test_known_good</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="n">scan_db</span> <span class="o">=</span> <span class="n">ScanDatabase</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">reset_scan_database</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">scan_associations</span> <span class="o">=</span> <span class="n">KnownGoodPapers</span><span class="p">()</span>
+    <span class="c1"># scan_associations.associate_title_file(&quot;herp-2016.csv&quot;,year,year)</span>
+    <span class="n">test_dois</span> <span class="o">=</span> <span class="n">scan_associations</span><span class="o">.</span><span class="n">get_associated_dois</span><span class="p">()</span>
+    <span class="n">validator</span> <span class="o">=</span> <span class="n">Validator</span><span class="p">(</span><span class="n">run_audit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">test_dois</span> <span class="o">=</span> <span class="n">test_dois</span> <span class="o">+</span> <span class="n">validator</span><span class="o">.</span><span class="n">get_matched_paper_dois</span><span class="p">()</span>
+    <span class="n">known_good_scans</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">doi</span> <span class="ow">in</span> <span class="n">test_dois</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scnning doi: </span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">Scan</span><span class="o">.</span><span class="n">clear_db_entry</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span>
+            <span class="n">scan</span> <span class="o">=</span> <span class="n">scan_db</span><span class="o">.</span><span class="n">scan_single_doi</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Score: </span><span class="si">{</span><span class="n">scan</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s2"> doi: </span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2"> title: </span><span class="si">{</span><span class="n">scan</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">known_good_scans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scan</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;cannot download; skipping.&quot;</span><span class="p">)</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;known_good.tsv&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">scan</span> <span class="ow">in</span> <span class="n">known_good_scans</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">scan</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">scan</span><span class="o">.</span><span class="n">textfile_path</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">scan</span><span class="o">.</span><span class="n">doi_string</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">scan</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\&quot;</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">results</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+    <span class="n">logging_level</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get_string</span><span class="p">(</span><span class="s1">&#39;general&#39;</span><span class="p">,</span> <span class="s1">&#39;logging_level&#39;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="nb">eval</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;logging.</span><span class="si">{</span><span class="n">logging_level</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">setup</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, J. Russack, S. Zhang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
